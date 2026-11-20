@@ -1,0 +1,35 @@
+{
+    "include": [
+        "main.py"
+    ],
+    "exclude": [
+        "**/__pycache__",
+        "**/node_modules",
+        "00.backup",
+        "static",
+        "dist",
+        "build"
+    ],
+    "typeCheckingMode": "basic",
+    "reportAny": false,
+    "reportUnknownVariableType": false,
+    "reportUnknownMemberType": false,
+    "reportUnknownArgumentType": false,
+    "reportUnknownParameterType": false,
+    "reportMissingParameterType": false,
+    "reportMissingReturnType": false,
+    "reportUnusedCallResult": false,
+    "reportUnusedImport": false,
+    "reportUnusedVariable": false,
+    "reportUnusedFunction": false,
+    "reportUnusedClass": false,
+    "reportMissingTypeStubs": false,
+    "reportUninitializedInstanceVariable": false,
+    "reportMissingTypeArgument": false,
+    "reportMissingImports": false,
+    "reportPrivateUsage": false,
+    "reportOptionalSubscript": false,
+    "reportImplicitStringConcatenation": false,
+    "reportInvalidCast": false,
+    "reportDeprecated": false
+}

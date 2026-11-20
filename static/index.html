@@ -1,0 +1,2714 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OpenTask 自动化任务节点编辑器</title>
+    <link rel="icon" type="image/png" href="/static/icon.png">
+    <link rel="stylesheet" type="text/css" href="litegraph.css">
+    <script type="text/javascript" src="litegraph.js"></script>
+    <style>
+    :root {
+        --bg: #0b0e14;
+        --panel: #131824;
+        --panel-2: #1a2130;
+        --line: #242b3a;
+        --line-2: #2f3a4f;
+        --txt: #e8ecf5;
+        --txt-dim: #9aa5bd;
+        --txt-mute: #6b7893;
+        --accent: #6366f1;
+        --accent-2: #22d3ee;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body { margin: 0; padding: 0; height: 100%; }
+
+    body {
+        font-family: "Segoe UI", "Microsoft YaHei", -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--txt);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---------- 顶栏 ---------- */
+    #topbar {
+        display: flex; align-items: center; gap: 10px; padding: 0 16px;
+        height: 56px; flex: 0 0 56px;
+        background: linear-gradient(180deg, #151a26 0%, #10141d 100%);
+        border-bottom: 1px solid var(--line);
+        box-shadow: 0 1px 0 rgba(255,255,255,.03), 0 8px 22px rgba(0,0,0,.4);
+        z-index: 20;
+    }
+    .brand { display: flex; align-items: center; gap: 9px; margin-right: 6px; user-select: none; }
+    .brand-logo {
+        width: 30px; height: 30px; border-radius: 9px; display: block;
+        object-fit: contain;
+        box-shadow: 0 4px 14px rgba(99,102,241,.45);
+    }
+    .brand-name { font-weight: 700; font-size: 15px; letter-spacing: .3px; }
+    .brand-sub {
+        font-size: 11px; color: #6d7893; border-left: 1px solid var(--line-2);
+        padding-left: 8px; margin-left: 2px;
+    }
+    .toolbar { display: flex; align-items: center; gap: 6px; }
+    .divider { width: 1px; height: 22px; background: var(--line-2); margin: 0 4px; }
+    /* 最近项目下拉菜单 */
+    .recent-wrap { position: relative; display: inline-block; }
+    .recent-menu {
+        display: none; position: absolute; top: 38px; left: 0; z-index: 60;
+        min-width: 260px; max-width: 420px; max-height: 340px; overflow-y: auto;
+        background: #151b28; border: 1px solid var(--line-2); border-radius: 10px;
+        box-shadow: 0 14px 34px rgba(0,0,0,.55); padding: 6px;
+    }
+    .recent-menu.show { display: block; }
+    .recent-item {
+        padding: 7px 10px; border-radius: 7px; cursor: pointer;
+        font-size: 12.5px; color: #dfe6f5; overflow: hidden;
+    }
+    .recent-item:hover { background: #2a3654; }
+    .recent-item .recent-name { font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .recent-item .recent-path { display: block; font-size: 10.5px; color: #6d7893; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+    .recent-empty { padding: 12px; color: #6d7893; font-size: 12px; text-align: center; }
+    .spacer { flex: 1; }
+
+    .btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        height: 32px; padding: 0 12px; border: 1px solid var(--line-2);
+        border-radius: 9px; background: #1d2433; color: #dfe6f5;
+        font-size: 12.5px; font-weight: 600; font-family: inherit;
+        cursor: pointer; white-space: nowrap;
+        transition: background .15s ease, transform .12s ease, box-shadow .15s ease;
+    }
+    .btn:hover { background: #26304a; transform: translateY(-1px); box-shadow: 0 5px 14px rgba(0,0,0,.4); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled, .btn[disabled] { opacity: .38; pointer-events: none; filter: saturate(.35); }
+    .btn-icon { width: 32px; padding: 0; justify-content: center; }
+
+    .btn-start { background: linear-gradient(180deg,#22c55e,#16a34a); border-color: #16a34a; color: #fff; box-shadow: 0 4px 14px rgba(34,197,94,.34); }
+    .btn-start:hover { background: linear-gradient(180deg,#25d065,#17b352); }
+    .btn-stop { background: linear-gradient(180deg,#ef4444,#dc2626); border-color: #dc2626; color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,.32); }
+    .btn-macro { background: linear-gradient(180deg,#ec4899,#db2777); border-color: #db2777; color: #fff; box-shadow: 0 4px 14px rgba(236,72,153,.3); }
+    .btn-accent { background: linear-gradient(180deg,#0ea5e9,#0284c7); border-color: #0284c7; color: #fff; }
+
+    .status-pill {
+        display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 13px;
+        border-radius: 999px; background: #1a2130; border: 1px solid var(--line-2);
+        font-size: 12px; font-weight: 600; color: #ffd54a; transition: color .2s;
+    }
+    .status-pill .dot {
+        width: 8px; height: 8px; border-radius: 50%; background: currentColor;
+        box-shadow: 0 0 0 4px rgba(255,213,74,.14); animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse { 50% { opacity: .4 } }
+    .status-pill.run { color: #4ade80; box-shadow: 0 0 0 1px rgba(74,222,128,.25) inset; }
+    .status-pill.off { color: #f87171; box-shadow: 0 0 0 1px rgba(248,113,113,.25) inset; }
+
+    /* ---------- 主体 ---------- */
+    #main-container { display: flex; flex: 1; min-height: 0; }
+
+    #node-panel {
+        width: 238px; flex: 0 0 238px; min-height: 0;
+        background: linear-gradient(180deg, #131824, #10151f);
+        border-right: 1px solid var(--line);
+        display: flex; flex-direction: column;
+        /* 固定层级，确保节点内的 DOM 输入框永远不会遮挡节点库 */
+        position: relative; z-index: 10;
+    }
+    .panel-header {
+        padding: 13px 14px 9px; font-size: 11px; font-weight: 700;
+        letter-spacing: 1.4px; text-transform: uppercase; color: #6d7893;
+    }
+    .search-wrap { padding: 0 12px 10px; }
+    #node-search {
+        width: 100%; height: 32px; padding: 0 10px; border-radius: 9px;
+        border: 1px solid var(--line-2); background: #0e131d; color: var(--txt);
+        font-size: 12.5px; font-family: inherit; outline: none;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    #node-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.18); }
+    #node-search::placeholder { color: #5c6478; }
+
+    .node-list { flex: 1; overflow-y: auto; padding: 0 10px 8px; }
+    .node-group { margin-bottom: 12px; }
+    .group-title {
+        display: flex; align-items: center; gap: 7px; margin: 8px 4px 6px;
+        font-size: 11px; font-weight: 700; letter-spacing: .6px; color: #7d88a3;
+    }
+    .group-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+    .node-btn {
+        display: flex; align-items: center; gap: 9px;
+        padding: 7px 10px; margin-bottom: 5px;
+        background: #1a2130; border: 1px solid var(--line); border-radius: 8px;
+        font-size: 12.5px; color: #dbe2f0; cursor: grab; user-select: none;
+        transition: background .14s ease, border-color .14s ease, transform .12s ease;
+    }
+    .node-btn:hover { background: #222b3f; border-color: #3b4763; transform: translateX(2px); }
+    .node-btn:active { cursor: grabbing; }
+    .node-btn .swatch { width: 4px; height: 16px; border-radius: 2px; flex: 0 0 4px; }
+    .node-btn.filtered { display: none; }
+
+    .panel-footer {
+        padding: 9px 12px; font-size: 11px; line-height: 1.6; color: #6d7893;
+        border-top: 1px solid var(--line);
+    }
+
+    /* ---------- 画布 ---------- */
+    #canvas-container { flex: 1; position: relative; min-width: 0; background: #0b0e14; }
+    canvas { display: block; width: 100%; height: 100%; outline: none; }
+
+    /* ---------- 日志面板 ---------- */
+    #log-panel {
+        position: absolute; left: 14px; bottom: 14px; width: 430px;
+        display: flex; flex-direction: column; z-index: 1000;
+        background: rgba(16,20,30,.82);
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden;
+        box-shadow: 0 14px 38px rgba(0,0,0,.55);
+    }
+    #log-panel.collapsed #log-console { display: none; }
+    .log-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 7px 10px; font-size: 11.5px; color: var(--txt-dim);
+        background: rgba(255,255,255,.035); border-bottom: 1px solid var(--line);
+        cursor: pointer; user-select: none;
+    }
+    .log-head .title { font-weight: 700; letter-spacing: .6px; }
+    .log-head button {
+        background: #232b3d; border: 1px solid var(--line-2); color: var(--txt-dim);
+        border-radius: 6px; font-size: 11px; padding: 2px 8px; cursor: pointer; font-family: inherit;
+    }
+    .log-head button:hover { color: #fff; background: #2d3750; }
+    #log-console {
+        padding: 8px 10px; max-height: 240px; overflow-y: auto;
+        font-family: Consolas, "Cascadia Mono", monospace; font-size: 12px;
+        line-height: 1.6; color: #cfd8ee;
+        word-break: break-word; white-space: pre-wrap;
+    }
+    #log-console::-webkit-scrollbar { width: 6px; }
+    #log-console::-webkit-scrollbar-thumb { background: #39435c; border-radius: 3px; }
+
+    /* ---------- 浮动提示 ---------- */
+    #hint-bar {
+        position: absolute; right: 14px; bottom: 16px; z-index: 999;
+        padding: 7px 13px; border-radius: 10px; font-size: 11.5px; color: #93e6ff;
+        background: rgba(8,12,20,.8); border: 1px solid rgba(34,211,238,.35);
+        backdrop-filter: blur(6px); opacity: 0; transform: translateY(6px);
+        transition: opacity .18s ease, transform .18s ease; pointer-events: none;
+    }
+    #hint-bar.show { opacity: 1; transform: translateY(0); }
+
+    #toast {
+        position: absolute; left: 50%; top: 16px; z-index: 1200;
+        padding: 8px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+        background: rgba(34,197,94,.16); color: #7df3a5; border: 1px solid rgba(34,197,94,.4);
+        backdrop-filter: blur(6px);
+        opacity: 0; transform: translateX(-50%) translateY(-14px);
+        transition: opacity .2s ease, transform .2s ease; pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.warn { background: rgba(245,158,11,.16); color: #fcd34d; border-color: rgba(245,158,11,.4); }
+
+    /* ---------- 帮助弹窗 ---------- */
+    .modal {
+        position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center;
+        background: rgba(6,9,14,.6); backdrop-filter: blur(3px);
+    }
+    .modal.hidden { display: none; }
+    .modal-card {
+        width: 540px; max-width: 92vw; padding: 18px 20px;
+        background: #151b28; border: 1px solid var(--line-2); border-radius: 14px;
+        box-shadow: 0 24px 60px rgba(0,0,0,.6);
+    }
+    .modal-card h3 { margin: 0 0 4px; font-size: 15px; }
+    .modal-card .sub { font-size: 11.5px; color: #6d7893; margin-bottom: 14px; }
+    .kbd-grid { display: grid; grid-template-columns: auto 1fr; gap: 9px 14px; font-size: 12.5px; color: var(--txt-dim); align-items: center; }
+    kbd {
+        display: inline-block; padding: 2px 7px; border-radius: 6px;
+        background: #222b3f; border: 1px solid var(--line-2); border-bottom-width: 2px;
+        font-family: Consolas, monospace; font-size: 11.5px; color: #e6ebf7; white-space: nowrap;
+    }
+    .modal-close {
+        margin-top: 16px; width: 100%; height: 34px; border-radius: 9px;
+        border: 1px solid var(--line-2); background: #222b3f; color: #e6ebf7;
+        font-weight: 600; font-family: inherit; cursor: pointer;
+    }
+    .modal-close:hover { background: #2d3750; }
+
+    /* ---------- 未保存工程确认弹窗 ---------- */
+    .confirm-card { width: 430px; }
+    .confirm-msg {
+        margin: 2px 0 18px; font-size: 12.5px; line-height: 1.65;
+        color: var(--txt-dim);
+    }
+    .confirm-actions { display: flex; gap: 9px; }
+    .confirm-actions .btn { flex: 1; height: 36px; justify-content: center; font-size: 12.5px; }
+    .btn-unsaved-discard { color: #fca5a5; border-color: rgba(248,113,113,.45); }
+    .btn-unsaved-discard:hover { background: rgba(248,113,113,.14); }
+
+    /* ---------- 滚动条 ---------- */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2b3547; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3a455e; }
+
+    /* ---------- 覆盖 litegraph 原生弹层，统一视觉 ---------- */
+    .litegraph.litecontextmenu.dark {
+        background: #151b28 !important; border: 1px solid var(--line-2) !important;
+        border-radius: 10px !important; padding: 6px !important;
+        box-shadow: 0 18px 44px rgba(0,0,0,.6) !important; overflow: hidden !important;
+    }
+    .litegraph.litecontextmenu.dark .litemenu-title { color: #6d7893 !important; background: transparent !important; }
+    .litegraph .litemenu-entry {
+        border-radius: 7px !important; font-size: 12.5px !important; padding: 5px 10px !important;
+        font-family: "Segoe UI", "Microsoft YaHei", sans-serif !important;
+    }
+    .litegraph .litemenu-entry:hover:not(.disabled):not(.separator) { background: #2a3654 !important; color: #fff !important; }
+    .litegraph.litesearchbox {
+        border-radius: 12px !important; border: 1px solid var(--line-2) !important;
+        background: #151b28 !important; box-shadow: 0 20px 50px rgba(0,0,0,.6) !important; overflow: hidden !important;
+    }
+    .litegraph.litesearchbox input, .litegraph.litesearchbox select {
+        background: #0e131d !important; color: #e8ecf5 !important;
+        border: 1px solid var(--line-2) !important; border-radius: 9px !important;
+    }
+    .litegraph.litesearchbox .name { color: #6d7893 !important; }
+    .litegraph.lite-search-item { border-bottom: 1px solid var(--line) !important; }
+    .litegraph.lite-search-item:hover, .litegraph.lite-search-item.selected { background: #2a3654 !important; }
+    .litegraph .dialog { background: #151b28 !important; border: 1px solid var(--line-2) !important; border-radius: 12px !important; }
+</style>
+</head>
+<body>
+    <header id="topbar">
+        <div class="brand">
+            <img class="brand-logo" src="/static/icon.png" alt="OpenTask" draggable="false">
+            <span class="brand-name">OpenTask</span>
+            <span class="brand-sub">节点自动化</span>
+        </div>
+
+        <div class="toolbar">
+            <button id="startBtn" class="btn btn-start" title="运行工作流（热键见开始节点）">▶ 开始执行</button>
+            <button id="stopBtn" class="btn btn-stop" title="停止运行">⏹ 停止</button>
+            <span class="divider"></span>
+            <button id="recordMacroBtn" class="btn btn-macro" title="新建动作宏节点并开始录制">🔴 录制宏</button>
+            <button id="fitViewBtn" class="btn" title="缩放至适应全部节点">⛶ 适应视图</button>
+            <span class="divider"></span>
+            <div class="recent-wrap">
+                <button id="recentBtn" class="btn" title="最近使用的工程">🕘 最近</button>
+                <div id="recentMenu" class="recent-menu"></div>
+            </div>
+            <button id="newBtn" class="btn">📄 新建</button>
+            <button id="loadBtn" class="btn">📂 加载</button>
+            <button id="saveBtn" class="btn">💾 保存</button>
+            <button id="saveAsBtn" class="btn">📝 另存为</button>
+        </div>
+
+        <div class="spacer"></div>
+
+        <button id="helpBtn" class="btn btn-icon" title="快捷键与操作说明">?</button>
+        <div id="status" class="status-pill ready"><span class="dot"></span><span id="status-text">🟡 连接中...</span></div>
+    </header>
+
+    <div id="main-container">
+        <aside id="node-panel">
+            <div class="panel-header">节点库</div>
+            <div class="search-wrap">
+                <input id="node-search" type="text" placeholder="搜索节点 / 拖到画布" autocomplete="off">
+            </div>
+
+            <div class="node-list">
+                <div class="node-group">
+                    <div class="group-title">流程</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/Start"><span class="swatch" style="background:#000"></span>▶ 开始</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/End"><span class="swatch" style="background:#000"></span>⏹ 结束</div>
+                </div>
+
+                <div class="node-group">
+                    <div class="group-title">图像素材</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/Image"><span class="swatch" style="background:#b08d00"></span>🖼️ 图片</div>
+                </div>
+
+                <div class="node-group">
+                    <div class="group-title">识别定位</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/Recognize"><span class="swatch" style="background:#600080"></span>🔍 图像识别</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/MultiColor"><span class="swatch" style="background:#b08d00"></span>🌈 多点找色</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/CenterAim"><span class="swatch" style="background:#8b0000"></span>🎯 智能置中</div>
+                </div>
+
+                <div class="node-group">
+                    <div class="group-title">输入模拟</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/MacroScript"><span class="swatch" style="background:#8b0000"></span>🔴 动作宏节点</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/MouseClick"><span class="swatch" style="background:#8b0000"></span>🖱️ 鼠标点击</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/MouseDown"><span class="swatch" style="background:#8b0000"></span>🔽 鼠标按下</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/MouseUp"><span class="swatch" style="background:#8b0000"></span>🔼 鼠标抬起</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/MouseMove"><span class="swatch" style="background:#8b0000"></span>↗️ 鼠标移动</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/KeyPress"><span class="swatch" style="background:#8b0000"></span>⌨️ 键盘点击</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/KeyDown"><span class="swatch" style="background:#8b0000"></span>⬇️ 键盘按下</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/KeyUp"><span class="swatch" style="background:#8b0000"></span>⬆️ 键盘抬起</div>
+                </div>
+
+                <div class="node-group">
+                    <div class="group-title">数据</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/Coordinate"><span class="swatch" style="background:#0055a4"></span>📍 坐标提取</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/VectorMath"><span class="swatch" style="background:#0055a4"></span>🧮 向量计算</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/CurrentMouse"><span class="swatch" style="background:#0055a4"></span>🖱️ 当前指针</div>
+                </div>
+
+                <div class="node-group">
+                    <div class="group-title">流程控制</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/ReturnTo"><span class="swatch" style="background:#00802b"></span>↩️ 返回至 (锚点)</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/Return"><span class="swatch" style="background:#00802b"></span>↪️ 返回 (跳跃)</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/Counter"><span class="swatch" style="background:#00802b"></span>🔢 计数器</div>
+                    <div class="node-btn" draggable="true" data-type="AutoTask/Delay"><span class="swatch" style="background:#4d4d4d"></span>⏳ 延迟</div>
+                </div>
+            </div>
+
+            <div class="panel-footer">
+                拖拽节点到画布添加<br>
+                把节点拖到<b>连线上</b>可自动接入<br>
+                左键拖空白<b>框选</b>，中键/空格<b>平移</b>
+            </div>
+        </aside>
+
+        <div id="canvas-container">
+            <canvas id="mycanvas"></canvas>
+
+            <div id="log-panel">
+                <div class="log-head" id="logHead">
+                    <span class="title">运行日志</span>
+                    <button id="clearLogBtn">清空</button>
+                </div>
+                <div id="log-console"></div>
+            </div>
+
+            <div id="hint-bar"></div>
+            <div id="toast"></div>
+        </div>
+    </div>
+
+    <div id="help-modal" class="modal hidden">
+        <div class="modal-card">
+            <h3>操作与快捷键</h3>
+            <div class="sub">模仿 Blender 节点编辑器的连线手感</div>
+            <div class="kbd-grid">
+                <kbd>拖到连线上</kbd><span>连线高亮 → 松手自动接入两个节点之间</span>
+                <kbd>拖出连线到空白处</kbd><span>弹出搜索框，创建节点并自动连好</span>
+                <kbd>双击空白处</kbd><span>打开节点搜索框</span>
+                <kbd>Alt + 点击连线</kbd><span>快速删除这条连线</span>
+                <kbd>Ctrl + 拖拽</kbd><span>剪刀：划过的连线全部切断</span>
+                <kbd>Shift + D</kbd><span>原地复制选中的节点</span>
+                <kbd>Ctrl + A</kbd><span>全选节点</span>
+                <kbd>Del / Backspace</kbd><span>删除选中节点</span>
+                <kbd>Ctrl + C / V</kbd><span>复制 / 粘贴节点</span>
+                <kbd>左键拖空白处</kbd><span>框选节点（Shift 为追加；空白处点一下取消全选）</span>
+                <kbd>拖动选中节点</kbd><span>同一选择集里的所有节点一起移动</span>
+                <kbd>中键拖 / 空格 + 拖</kbd><span>平移画布</span>
+                <kbd>右键菜单</kbd><span>添加节点、连线、属性操作</span>
+                <kbd>滚轮</kbd><span>缩放画布</span>
+            </div>
+            <button class="modal-close" id="helpCloseBtn">知道了</button>
+        </div>
+    </div>
+    <div id="unsaved-modal" class="modal hidden">
+        <div class="modal-card confirm-card">
+            <h3 id="unsaved-title">当前工程尚未保存</h3>
+            <div class="sub" id="unsaved-sub">继续操作会丢失未保存的修改</div>
+            <p class="confirm-msg" id="unsaved-msg">是否先保存当前工程？</p>
+            <div class="confirm-actions">
+                <button class="btn btn-accent" id="unsaved-save-btn">保存</button>
+                <button class="btn btn-unsaved-discard" id="unsaved-discard-btn">不保存</button>
+                <button class="btn" id="unsaved-cancel-btn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var graph = new LGraph();
+        var canvas = new LGraphCanvas("#mycanvas", graph);
+
+        // ==================== 画布视觉主题 ====================
+        LiteGraph.CANVAS_GRID_SIZE = 20;
+        LiteGraph.NODE_TITLE_HEIGHT = 30;
+        LiteGraph.NODE_SLOT_HEIGHT = 22;
+        LiteGraph.NODE_WIDGET_HEIGHT = 22;
+        LiteGraph.NODE_TEXT_SIZE = 13;
+        LiteGraph.NODE_TITLE_FONT = "bold 12.5px 'Segoe UI','Microsoft YaHei',sans-serif";
+        LiteGraph.NODE_TEXT_FONT = "12px 'Segoe UI','Microsoft YaHei',sans-serif";
+        LiteGraph.NODE_TITLE_COLOR = "#e9eefb";
+        LiteGraph.NODE_SELECTED_TITLE_COLOR = "#ffffff";
+        LiteGraph.NODE_TEXT_COLOR = "#c3cde3";
+        LiteGraph.NODE_DEFAULT_COLOR = "#1e2536";
+        LiteGraph.NODE_DEFAULT_BGCOLOR = "#121724";
+        LiteGraph.NODE_DEFAULT_BOXCOLOR = "#2a3348";
+        LiteGraph.LINK_COLOR = "#8ea0d0";
+        LiteGraph.EVENT_LINK_COLOR = "#22d3ee";
+        LiteGraph.CONNECTING_LINK_COLOR = "#a5b4fc";
+        LiteGraph.DEFAULT_SHADOW_COLOR = "rgba(0,0,0,0.55)";
+
+        canvas.links_render_mode = LiteGraph.SPLINE_LINK;  // 曲线连线，Blender 观感
+        canvas.render_shadows = true;
+        canvas.highquality_render = true;
+        canvas.render_connection_arrows = false;   // 去掉连线上的三角形箭头
+        // 去掉连线中点的圆形圆点（litegraph 在 drawConnections 内用半径 5 的圆绘制，且不受上面的开关控制）
+        (function () {
+            var _origDrawConnections = LGraphCanvas.prototype.drawConnections;
+            LGraphCanvas.prototype.drawConnections = function (ctx) {
+                if (!ctx || !ctx.arc) return _origDrawConnections.apply(this, arguments);
+                var _arc = ctx.arc;
+                ctx.arc = function () {
+                    if (arguments.length >= 3 && arguments[2] === 5) return; // 跳过连线中点圆点
+                    return _arc.apply(this, arguments);
+                };
+                try {
+                    return _origDrawConnections.apply(this, arguments);
+                } finally {
+                    ctx.arc = _arc;
+                }
+            };
+        })();
+        canvas.connections_width = 3;
+        canvas.default_link_color = "#8ea0d0";
+        canvas.default_connection_color = {
+            input_off: "#5b6786", input_on: "#22d3ee",
+            output_off: "#5b6786", output_on: "#a78bfa"
+        };
+        canvas.render_canvas_border = false;
+        canvas.background_image = null;
+        canvas.allow_searchbox = false;  // 关闭双击空白处弹出的搜索框（无用途）
+        canvas.renderInfo = function () {};
+
+        // ==================== 轻量 UI 反馈 ====================
+        function setStatus(text, cls) {
+            var el = document.getElementById("status");
+            var txt = document.getElementById("status-text");
+            if (!el || !txt) return;
+            el.className = "status-pill " + (cls || "ready");
+            txt.innerText = text;
+        }
+        function toast(msg, warn) {
+            var t = document.getElementById("toast");
+            if (!t) return;
+            t.innerText = msg;
+            t.className = "show" + (warn ? " warn" : "");
+            clearTimeout(t._timer);
+            t._timer = setTimeout(function () { t.className = ""; }, 1800);
+        }
+        function hint(msg) {
+            var h = document.getElementById("hint-bar");
+            if (!h) return;
+            if (!msg) { h.className = ""; return; }
+            h.innerText = msg;
+            h.className = "show";
+        }
+
+        // ==================== 保持多选整体拖动 ====================
+        // litegraph 默认点击已选节点会把选择折叠成单个；
+        // 这里：点击已处于多选集中的节点时保持整组，使其能一起被拖动（Blender 行为）。
+        var _origProcessNodeSelected = canvas.processNodeSelected.bind(canvas);
+        canvas.processNodeSelected = function (node, e) {
+            var mod = e && (e.shiftKey || e.ctrlKey || e.metaKey);
+            if (node && node.is_selected && !mod) {
+                // 已在多选集内：保持整组选择，仅设置被抓取的节点
+                if (this.allow_dragnodes) {
+                    this.graph.beforeChange();
+                    this.node_dragged = node;
+                }
+                this.dirty_canvas = true;
+                return;
+            }
+            return _origProcessNodeSelected(node, e);
+        };
+
+        // ==================== Blender 式连线操作 ====================
+        var _hoverLinkId = null;   // 拖拽节点时鼠标下的连线
+        var _cutMode = null;       // Ctrl 剪刀状态
+        var _boxSelect = null;     // 左键框选状态（Blender 式）
+        var _spaceDown = false;    // 空格按住 = 平移模式，此时不抢左键
+
+        function linkEndpoints(link) {
+            var a = graph.getNodeById(link.origin_id);
+            var b = graph.getNodeById(link.target_id);
+            if (!a || !b) return null;
+            return {
+                a: a.getConnectionPos(false, link.origin_slot),
+                b: b.getConnectionPos(true, link.target_slot)
+            };
+        }
+        function bezierPoint(a, b, t) {
+            var dist = Math.sqrt(Math.pow(b[0] - a[0], 2) + Math.pow(b[1] - a[1], 2));
+            var ox = dist * 0.25;
+            var c1 = [a[0] + ox, a[1]];
+            var c2 = [b[0] - ox, b[1]];
+            var mt = 1 - t;
+            return [
+                mt * mt * mt * a[0] + 3 * mt * mt * t * c1[0] + 3 * mt * t * t * c2[0] + t * t * t * b[0],
+                mt * mt * mt * a[1] + 3 * mt * mt * t * c1[1] + 3 * mt * t * t * c2[1] + t * t * t * b[1]
+            ];
+        }
+        function sampleLink(link, steps) {
+            var ends = linkEndpoints(link);
+            if (!ends) return null;
+            var pts = [];
+            for (var i = 0; i <= steps; i++) pts.push(bezierPoint(ends.a, ends.b, i / steps));
+            return pts;
+        }
+        function findLinkAt(pos, threshold) {
+            var best = null;
+            var bestD = (threshold || 12) / canvas.ds.scale;
+            for (var id in graph.links) {
+                var link = graph.links[id];
+                if (!link) continue;
+                var pts = sampleLink(link, 14);
+                if (!pts) continue;
+                for (var i = 0; i < pts.length; i++) {
+                    var d = Math.sqrt(Math.pow(pts[i][0] - pos[0], 2) + Math.pow(pts[i][1] - pos[1], 2));
+                    if (d < bestD) { bestD = d; best = link; }
+                }
+            }
+            return best;
+        }
+        function firstSlot(slots, type) {
+            if (!slots) return -1;
+            for (var i = 0; i < slots.length; i++) {
+                if (!type || slots[i].type === type) return i;
+            }
+            return -1;
+        }
+        // 判断节点是否已经存在连接（输入或输出任意一端有连线）
+        function nodeHasLinks(node) {
+            if (node.inputs) {
+                for (var i = 0; i < node.inputs.length; i++) {
+                    if (node.inputs[i].link != null) return true;
+                }
+            }
+            if (node.outputs) {
+                for (var i = 0; i < node.outputs.length; i++) {
+                    var o = node.outputs[i];
+                    if (o.links && o.links.length) return true;
+                }
+            }
+            return false;
+        }
+        // 核心：把节点插进某条连线的中间，并自动接好上下游
+        function insertNodeIntoLink(node, linkId) {
+            var link = graph.links[linkId];
+            if (!link) return false;
+            var from = graph.getNodeById(link.origin_id);
+            var to = graph.getNodeById(link.target_id);
+            if (!from || !to || node === from || node === to) return false;
+            // 已链接的节点不参与自动插入，否则其原有连线（尤其是输入端的唯一连线）会被覆盖/破坏
+            if (nodeHasLinks(node)) return false;
+            var originSlot = link.origin_slot, targetSlot = link.target_slot;
+            var inSlot = firstSlot(node.inputs, LiteGraph.EVENT);
+            var outSlot = firstSlot(node.outputs, LiteGraph.EVENT);
+            if (inSlot < 0 || outSlot < 0) {
+                toast("该节点没有执行流接口，无法自动接入连线", true);
+                return false;
+            }
+            graph.beforeChange();
+            graph.removeLink(linkId);
+            var l1 = from.connect(originSlot, node, inSlot);
+            var l2 = node.connect(outSlot, to, targetSlot);
+            graph.afterChange();
+            canvas.setDirty(true, true);
+            if (!l1 || !l2) { toast("自动接入失败，请手动连接", true); return false; }
+            toast("已插入连线中间，上下游自动接好");
+            return true;
+        }
+        function segIntersect(p1, p2, p3, p4) {
+            function cr(a, b, c) { return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]); }
+            var d1 = cr(p3, p4, p1), d2 = cr(p3, p4, p2), d3 = cr(p1, p2, p3), d4 = cr(p1, p2, p4);
+            return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0));
+        }
+
+        // ① 拖动节点经过连线 → 高亮；松手 → 自动接入
+        document.addEventListener("mousemove", function () {
+            if (!canvas.node_dragged) {
+                if (_hoverLinkId !== null) { _hoverLinkId = null; canvas.setDirty(true, false); }
+                return;
+            }
+            var link = findLinkAt(canvas.graph_mouse, 14);
+            // 已链接的节点不再支持"拖到连线上自动插入"，避免破坏其原有连接
+            var id = (link && !nodeHasLinks(canvas.node_dragged)) ? link.id : null;
+            if (id !== _hoverLinkId) {
+                _hoverLinkId = id;
+                canvas.setDirty(true, false);
+            }
+            hint(id !== null ? "松开鼠标 → 自动插入这两个节点之间" : "");
+        });
+        canvas.onNodeMoved = function (node) {
+            if (_hoverLinkId !== null) {
+                var id = _hoverLinkId;
+                _hoverLinkId = null;
+                hint("");
+                insertNodeIntoLink(node, id);
+            }
+        };
+
+        // ② Alt + 点击连线 = 快速删除
+        document.addEventListener("mousedown", function (e) {
+            if (!e.altKey || e.button !== 0 || e.target !== canvas.canvas) return;
+            var link = findLinkAt(canvas.graph_mouse, 12);
+            if (!link) return;
+            graph.removeLink(link.id);
+            canvas.setDirty(true, true);
+            toast("已删除该连线");
+            e.preventDefault();
+            e.stopPropagation();
+        }, true);
+
+        // ③ Ctrl + 拖拽 = 剪刀，划过的连线全部切断
+        document.addEventListener("mousedown", function (e) {
+            if (!e.ctrlKey || e.button !== 0 || e.target !== canvas.canvas) return;
+            _cutMode = {
+                start: [canvas.graph_mouse[0], canvas.graph_mouse[1]],
+                end: [canvas.graph_mouse[0], canvas.graph_mouse[1]]
+            };
+            hint("剪刀模式：拖出一条线，穿过的连线会被切断");
+            canvas.setDirty(true, false);
+            e.preventDefault();
+            e.stopPropagation();
+        }, true);
+        document.addEventListener("mousemove", function () {
+            if (!_cutMode) return;
+            _cutMode.end = [canvas.graph_mouse[0], canvas.graph_mouse[1]];
+            canvas.setDirty(true, false);
+        });
+        document.addEventListener("mouseup", function () {
+            if (!_cutMode) return;
+            var seg = _cutMode;
+            _cutMode = null;
+            hint("");
+            var removed = 0;
+            for (var id in graph.links) {
+                var link = graph.links[id];
+                if (!link) continue;
+                var pts = sampleLink(link, 14);
+                if (!pts) continue;
+                for (var i = 0; i < pts.length - 1; i++) {
+                    if (segIntersect(seg.start, seg.end, pts[i], pts[i + 1])) {
+                        graph.removeLink(id);
+                        removed++;
+                        break;
+                    }
+                }
+            }
+            canvas.setDirty(true, true);
+            if (removed) toast("已剪断 " + removed + " 条连线");
+            else toast("没有剪到任何连线", true);
+        }, true);
+
+        // ⑤ 左键拖空白处 = 框选（平移改用中键 / 空格 + 拖拽，与 Blender 一致）
+        function rectHit(n, x1, y1, x2, y2) {
+            var top = n.pos[1] - LiteGraph.NODE_TITLE_HEIGHT;
+            var bottom = n.pos[1] + n.size[1];
+            var right = n.pos[0] + n.size[0];
+            return n.pos[0] < x2 && right > x1 && top < y2 && bottom > y1;
+        }
+
+        document.addEventListener("mousedown", function (e) {
+            if (e.button !== 0 || e.target !== canvas.canvas) return;
+            if (e.altKey || e.ctrlKey) return;      // Alt 删连线 / Ctrl 剪刀
+            if (_spaceDown || _cutMode) return;      // 空格与剪刀优先
+            if (canvas.read_only) return;
+            if (canvas.node_over) return;            // 点在节点上，交给 litegraph 拖动
+
+            // 左键点击空白处：先关闭可能打开的右键菜单
+            LiteGraph.closeAllContextMenus();
+
+            // 追加选择时先快照旧选择集：litegraph 可能会在 mouseup 时先清空一次
+            var prev = null;
+            if (e.shiftKey) {
+                prev = [];
+                for (var k in canvas.selected_nodes) prev.push(canvas.selected_nodes[k]);
+            }
+            _boxSelect = {
+                start: [canvas.graph_mouse[0], canvas.graph_mouse[1]],
+                end: [canvas.graph_mouse[0], canvas.graph_mouse[1]],
+                add: e.shiftKey,
+                prev: prev
+            };
+            e.preventDefault();
+            e.stopPropagation();                      // 阻止 litegraph 启动画布平移
+            canvas.setDirty(true, false);
+        }, true);
+
+        document.addEventListener("mousemove", function () {
+            if (!_boxSelect) return;
+            _boxSelect.end = [canvas.graph_mouse[0], canvas.graph_mouse[1]];
+            canvas.setDirty(true, false);
+        });
+
+        document.addEventListener("mouseup", function () {
+            if (!_boxSelect) return;
+            var box = _boxSelect;
+            _boxSelect = null;
+            var x1 = Math.min(box.start[0], box.end[0]);
+            var y1 = Math.min(box.start[1], box.end[1]);
+            var x2 = Math.max(box.start[0], box.end[0]);
+            var y2 = Math.max(box.start[1], box.end[1]);
+
+            // 只是点了一下空白处 → 取消全选（Blender 行为）
+            if (x2 - x1 < 4 || y2 - y1 < 4) {
+                if (!box.add) canvas.deselectAllNodes();
+                canvas.setDirty(true, true);
+                return;
+            }
+
+            var picked = [];
+            var nodes = graph._nodes || [];
+            for (var i = 0; i < nodes.length; i++) {
+                if (rectHit(nodes[i], x1, y1, x2, y2)) picked.push(nodes[i]);
+            }
+            if (box.add && box.prev && box.prev.length) {
+                for (var p = 0; p < box.prev.length; p++) {
+                    if (picked.indexOf(box.prev[p]) === -1) picked.push(box.prev[p]);
+                }
+            }
+            canvas.selectNodes(picked, false);
+            canvas.setDirty(true, true);
+            if (picked.length) {
+                toast((box.add ? "已追加选中 " : "已选中 ") + picked.length + " 个节点，拖动可整体移动");
+            }
+        }, true);
+
+        // Ctrl/Cmd + S：保存；Ctrl/Cmd + Shift + S：另存为。
+        // 用捕获阶段注册在 document 上：焦点在画布时也能拦截，
+        // 否则会被画布自身的 keydown 捕获监听（litegraph 在捕获阶段绑定到画布元素）
+        // 吞掉，导致键盘保存不生效、未保存 * 号不消失。
+        document.addEventListener("keydown", function (e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key || "").toLowerCase() === "s") {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.shiftKey) saveAsGraph(); else saveGraph();
+            }
+        }, true);
+
+        // ⑥ Shift + D = 原地复制选中节点（Blender 快捷键）
+        document.addEventListener("keydown", function (e) {
+            var key = (e.key || "").toLowerCase();
+            var t = e.target;
+            if (t && (t.localName === "input" || t.localName === "textarea")) return;
+            if (e.keyCode === 32) _spaceDown = true;   // 空格按住期间左键留给平移
+            if (key === "d" && e.shiftKey && !e.ctrlKey && !e.altKey) {
+                var count = Object.keys(canvas.selected_nodes || {}).length;
+                if (!count) { toast("请先选中要复制的节点", true); return; }
+                canvas.copyToClipboard();
+                canvas.pasteFromClipboard();
+                toast("已复制 " + count + " 个节点");
+                e.preventDefault();
+                e.stopPropagation();
+            } else if (e.key === "F1" || key === "?") {
+                toggleHelp();
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener("keyup", function (e) {
+            if (e.keyCode === 32) _spaceDown = false;
+        });
+        window.addEventListener("blur", function () { _spaceDown = false; _boxSelect = null; _cutMode = null; });
+
+        // ==================== 绘制层：执行高亮 / 连线高亮 / 剪刀 ====================
+        canvas.onDrawForeground = function (ctx) {
+            // 【修复】每帧同步所有动作宏节点的输入框（含已移出视口被裁剪的节点），
+            // 避免节点移出视口后 textarea 位置冻结、残留在节点库上方造成遮挡。
+            if (this.graph && this.graph._nodes) {
+                var _nodes = this.graph._nodes;
+                for (var _ni = 0; _ni < _nodes.length; _ni++) {
+                    var _n = _nodes[_ni];
+                    if (_n && typeof _n._updateTextAreaPosition === "function" && _n._isAttached) {
+                        _n._updateTextAreaPosition(this);
+                    }
+                }
+            }
+
+            // 正在执行的节点：绿色描边
+            if (this.executing_node_id) {
+                var node = this.graph.getNodeById(this.executing_node_id);
+                if (node) {
+                    ctx.save();
+                    ctx.strokeStyle = "#4CAF50";
+                    ctx.lineWidth = 2 / this.ds.scale;
+                    ctx.shadowColor = "#4CAF50";
+                    ctx.shadowBlur = 14;
+                    var r = 6;
+                    var x = node.pos[0] - 2, y = node.pos[1] - LiteGraph.NODE_TITLE_HEIGHT - 2;
+                    var w = node.size[0] + 4, h = node.size[1] + LiteGraph.NODE_TITLE_HEIGHT + 4;
+                    ctx.beginPath();
+                    if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); } else { ctx.rect(x, y, w, h); }
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
+            // 拖到连线上：绿色高亮该连线
+            if (_hoverLinkId !== null) {
+                var hl = graph.links[_hoverLinkId];
+                var pts = hl ? sampleLink(hl, 24) : null;
+                if (pts) {
+                    ctx.save();
+                    ctx.lineCap = "round";
+                    ctx.lineJoin = "round";
+                    ctx.beginPath();
+                    ctx.moveTo(pts[0][0], pts[0][1]);
+                    for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+                    ctx.strokeStyle = "rgba(34,197,94,0.28)";
+                    ctx.lineWidth = 13 / this.ds.scale;
+                    ctx.stroke();
+                    ctx.strokeStyle = "#22c55e";
+                    ctx.lineWidth = 2.5 / this.ds.scale;
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+
+            // 左键框选：青色半透明矩形
+            if (_boxSelect) {
+                var x = Math.min(_boxSelect.start[0], _boxSelect.end[0]);
+                var y = Math.min(_boxSelect.start[1], _boxSelect.end[1]);
+                var w = Math.abs(_boxSelect.end[0] - _boxSelect.start[0]);
+                var h = Math.abs(_boxSelect.end[1] - _boxSelect.start[1]);
+                ctx.save();
+                ctx.fillStyle = _boxSelect.add ? "rgba(34,211,238,0.10)" : "rgba(99,102,241,0.12)";
+                ctx.fillRect(x, y, w, h);
+                ctx.strokeStyle = _boxSelect.add ? "#22d3ee" : "#818cf8";
+                ctx.lineWidth = 1.4 / this.ds.scale;
+                ctx.setLineDash([5 / this.ds.scale, 4 / this.ds.scale]);
+                ctx.strokeRect(x, y, w, h);
+                ctx.restore();
+            }
+
+            // Ctrl 剪刀：红色虚线
+            if (_cutMode) {
+                ctx.save();
+                ctx.strokeStyle = "#f43f5e";
+                ctx.lineWidth = 1.8 / this.ds.scale;
+                ctx.setLineDash([7 / this.ds.scale, 6 / this.ds.scale]);
+                ctx.beginPath();
+                ctx.moveTo(_cutMode.start[0], _cutMode.start[1]);
+                ctx.lineTo(_cutMode.end[0], _cutMode.end[1]);
+                ctx.stroke();
+                ctx.restore();
+            }
+        };
+
+        // 视图自适应所有节点
+        function fitView() {
+            var nodes = graph._nodes;
+            if (!nodes || nodes.length === 0) return;
+            var min_x = Infinity, min_y = Infinity, max_x = -Infinity, max_y = -Infinity;
+            for (var i = 0; i < nodes.length; i++) {
+                var n = nodes[i];
+                min_x = Math.min(min_x, n.pos[0]);
+                min_y = Math.min(min_y, n.pos[1] - LiteGraph.NODE_TITLE_HEIGHT);
+                max_x = Math.max(max_x, n.pos[0] + n.size[0]);
+                max_y = Math.max(max_y, n.pos[1] + n.size[1]);
+            }
+            var width = Math.max(max_x - min_x, 1);
+            var height = Math.max(max_y - min_y, 1);
+            var center_x = min_x + width / 2;
+            var center_y = min_y + height / 2;
+            var padding = 220;
+            var target_scale = Math.min((canvas.canvas.width - padding) / width,
+                                        (canvas.canvas.height - padding) / height);
+            target_scale = Math.max(0.1, Math.min(target_scale, 1.2));
+            var tx = (canvas.canvas.width / 2) / target_scale - center_x;
+            var ty = (canvas.canvas.height / 2) / target_scale - center_y;
+            var s0 = canvas.ds.scale, ox0 = canvas.ds.offset[0], oy0 = canvas.ds.offset[1];
+            var t0 = performance.now();
+            function step(time) {
+                var p = (time - t0) / 300;
+                if (p > 1) p = 1;
+                var ease = 1 - Math.pow(1 - p, 3);
+                canvas.ds.scale = s0 + (target_scale - s0) * ease;
+                canvas.ds.offset[0] = ox0 + (tx - ox0) * ease;
+                canvas.ds.offset[1] = oy0 + (ty - oy0) * ease;
+                canvas.setDirty(true, true);
+                if (p < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        function toggleHelp() {
+            var m = document.getElementById("help-modal");
+            if (m) m.classList.toggle("hidden");
+        }
+        window.addEventListener("contextmenu", function(e) {
+            if(e.target.id === "mycanvas") { e.preventDefault(); }
+        });
+
+        canvas.onRenderBackground = function(html_canvas, ctx) {
+            ctx.fillStyle = "#202020";
+            ctx.fillRect(0, 0, html_canvas.width, html_canvas.height);
+            
+            ctx.fillStyle = "#555555";
+            var scale = this.ds.scale; 
+            var dot_spacing = 20 * scale; 
+            
+            if (dot_spacing < 5) return;
+            
+            var offset_x = this.ds.offset[0] % dot_spacing;
+            var offset_y = this.ds.offset[1] % dot_spacing;
+            
+            var radius = 1.2 * scale;
+            if (radius < 0.5) radius = 0.5;
+
+            ctx.beginPath();
+            for (var x = offset_x; x < html_canvas.width; x += dot_spacing) {
+                for (var y = offset_y; y < html_canvas.height; y += dot_spacing) {
+                    ctx.moveTo(x, y);
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                }
+            }
+            ctx.fill();
+            return true;
+        };
+
+        function resizeCanvas() {
+            var container = document.getElementById("canvas-container");
+            canvas.resize(container.clientWidth, container.clientHeight);
+        }
+        window.addEventListener("resize", resizeCanvas);
+        setTimeout(resizeCanvas, 100);
+
+        var btns = document.querySelectorAll('.node-btn');
+        var container = document.getElementById("canvas-container");
+
+        btns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var type = this.getAttribute('data-type');
+                var node = LiteGraph.createNode(type);
+                if(node) {
+                    var centerX = (canvas.canvas.width / 2) / canvas.ds.scale - canvas.ds.offset[0] - node.size[0] / 2;
+                    var centerY = (canvas.canvas.height / 2) / canvas.ds.scale - canvas.ds.offset[1] - node.size[1] / 2;
+                    node.pos = [centerX, centerY];
+                    graph.add(node);
+                }
+            });
+            btn.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('type', this.getAttribute('data-type'));
+            });
+        });
+
+        container.addEventListener('dragover', function(e) { e.preventDefault(); }, true);
+        container.addEventListener('drop', function(e) {
+            if (canvas.is_running_lock) return;
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var type = e.dataTransfer.getData('type');
+            if(type) {
+                var node = LiteGraph.createNode(type);
+                if(node) {
+                    node.pos = canvas.convertEventToCanvasOffset(e);
+                    graph.add(node);
+                }
+                return;
+            }
+            
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                var file = e.dataTransfer.files[0];
+                if (file.type.startsWith('image/')) {
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                        var base64 = event.target.result;
+                        var node = LiteGraph.createNode("AutoTask/Image");
+                        if (node) {
+                            node.pos = canvas.convertEventToCanvasOffset(e);
+                            node.properties.image_base64 = base64;
+                            node.img = new Image();
+                            node.img.src = base64;
+                            node.img.onload = () => { canvas.setDirty(true, true); };
+                            graph.add(node);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+
+        window.addEventListener('paste', function(e) {
+            if (canvas.is_running_lock) return;
+            if (e.clipboardData && e.clipboardData.items) {
+                for (var i = 0; i < e.clipboardData.items.length; i++) {
+                    var item = e.clipboardData.items[i];
+                    if (item.type.indexOf("image") !== -1) {
+                        var file = item.getAsFile();
+                        var reader = new FileReader();
+                        reader.onload = function(event) {
+                            var base64 = event.target.result;
+                            var node = LiteGraph.createNode("AutoTask/Image");
+                            if (node) {
+                                var centerX = (canvas.canvas.width / 2) / canvas.ds.scale - canvas.ds.offset[0] - node.size[0] / 2;
+                                var centerY = (canvas.canvas.height / 2) / canvas.ds.scale - canvas.ds.offset[1] - node.size[1] / 2;
+                                node.pos = [centerX, centerY];
+                                node.properties.image_base64 = base64;
+                                node.img = new Image();
+                                node.img.src = base64;
+                                node.img.onload = () => { canvas.setDirty(true, true); };
+                                graph.add(node);
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                        break;
+                    }
+                }
+            }
+        });
+
+        LiteGraph.clearRegisteredTypes();
+
+        function StartNode() {
+            this.addOutput("执行流", LiteGraph.EVENT);
+            this.properties = { hotkey: "F8" };
+            this.hotkey_widget = this.addWidget("text", "启动热键", this.properties.hotkey, null, { property: "hotkey" });
+            this.hotkey_widget.disabled = true; 
+            
+            this.addWidget("button", "⌨️ 录制热键", null, () => {
+                recordKey((keyStr) => {
+                    this.properties.hotkey = keyStr;
+                    this.hotkey_widget.value = keyStr;
+                    if(this.combo_widget) this.combo_widget.value = keyStr.toLowerCase();
+                    this.setDirtyCanvas(true, true);
+                });
+            });
+            this.combo_widget = this.addWidget("combo", "常用按键", this.properties.hotkey.toLowerCase(), (v) => {
+                this.properties.hotkey = v.toUpperCase();
+                this.hotkey_widget.value = v.toUpperCase();
+                this.setDirtyCanvas(true, true);
+            }, { values: ["space", "enter", "ctrl", "shift", "alt", "win", "esc"] });
+            this.title = "▶ 开始";
+            this.color = "#000000"; this.bgcolor = "#222222";
+        }
+        StartNode.prototype.onConfigure = function() {
+            if(this.hotkey_widget) this.hotkey_widget.value = this.properties.hotkey;
+            if(this.combo_widget) this.combo_widget.value = this.properties.hotkey.toLowerCase();
+        };
+        LiteGraph.registerNodeType("AutoTask/Start", StartNode);
+        
+        function EndNode() {
+            this.addInput("执行流", LiteGraph.EVENT);
+            this.properties = { hotkey: "ESC" };
+            this.hotkey_widget = this.addWidget("text", "停止热键", this.properties.hotkey, null, { property: "hotkey" });
+            this.hotkey_widget.disabled = true; 
+            
+            this.addWidget("button", "⌨️ 录制热键", null, () => {
+                recordKey((keyStr) => {
+                    this.properties.hotkey = keyStr;
+                    this.hotkey_widget.value = keyStr;
+                    if(this.combo_widget) this.combo_widget.value = keyStr.toLowerCase();
+                    this.setDirtyCanvas(true, true);
+                });
+            });
+            this.combo_widget = this.addWidget("combo", "常用按键", this.properties.hotkey.toLowerCase(), (v) => {
+                this.properties.hotkey = v.toUpperCase();
+                this.hotkey_widget.value = v.toUpperCase();
+                this.setDirtyCanvas(true, true);
+            }, { values: ["space", "enter", "ctrl", "shift", "alt", "win", "esc"] });
+            this.title = "⏹ 结束";
+            this.color = "#000000"; this.bgcolor = "#222222";
+        }
+        EndNode.prototype.onConfigure = function() {
+            if(this.hotkey_widget) this.hotkey_widget.value = this.properties.hotkey;
+            if(this.combo_widget) this.combo_widget.value = this.properties.hotkey.toLowerCase();
+        };
+        LiteGraph.registerNodeType("AutoTask/End", EndNode);
+
+        function ImageNode() {
+            this.addOutput("图片数据", "image");
+            this.properties = { image_base64: "" };
+            this.img = null; 
+            
+            this.addWidget("button", "浏览系统图片", null, () => {
+                var input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = (e) => {
+                    var file = e.target.files[0];
+                    if (file) {
+                        var reader = new FileReader();
+                        reader.onload = (event) => {
+                            var base64 = event.target.result;
+                            this.properties.image_base64 = base64; 
+                            this.img = new Image();
+                            this.img.src = base64;
+                            this.img.onload = () => {
+                                this.setDirtyCanvas(true, true); 
+                            };
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                };
+                input.click();
+            });
+            this.title = "🖼️ 图片加载";
+            this.color = "#b08d00"; this.bgcolor = "#5c4a00";
+        }
+        ImageNode.prototype.onDrawBackground = function(ctx) {
+            if (this.img && this.img.width) {
+                var margin = 10;
+                var start_y = 40;
+                var w = this.size[0] - margin * 2;
+                var h = (w / this.img.width) * this.img.height;
+                this.size[1] = Math.max(80, h + start_y + 10); 
+                ctx.drawImage(this.img, margin, start_y, w, h);
+            }
+        };
+        ImageNode.prototype.onConfigure = function(info) {
+            if (this.properties.image_base64) {
+                this.img = new Image();
+                this.img.src = this.properties.image_base64;
+                this.img.onload = () => { this.setDirtyCanvas(true, true); };
+            }
+        };
+        LiteGraph.registerNodeType("AutoTask/Image", ImageNode);
+
+        function RecognizeNode() {
+            this.addInput("执行输入", LiteGraph.EVENT);
+            this.addInput("图片输入", "image");
+            this.addOutput("✅ 识别到", LiteGraph.EVENT);
+            this.addOutput("❌ 未识别到", LiteGraph.EVENT);
+            this.addOutput("📍 位置", "vector"); 
+            this.properties = { confidence: 0.8, use_region: false, region: null };
+            this.addWidget("number", "匹配相似度", this.properties.confidence, (v) => { this.properties.confidence = v; }, { property: "confidence", min: 0, max: 1, step: 0.1 });
+
+            // 【新增】可选「识别范围」：只在框选区域内截图匹配，省性能 + 降误判
+            var self = this;
+            var doPickRegion = function () {
+                showRegionPicker(function (box) {
+                    if (box) {
+                        self.properties.region = box;
+                        self.properties.use_region = true;
+                    } else if (!self.properties.region) {
+                        self.properties.use_region = false; // 取消框选且没有旧范围时把开关拨回去
+                    }
+                    if (self.region_widget) self.region_widget.value = self.properties.use_region;
+                    self._updateRegionUI();
+                });
+            };
+
+            this.region_widget = this.addWidget("toggle", "限定识别范围", this.properties.use_region, (v) => {
+                this.properties.use_region = v;
+                // 勾选且尚未框选过范围时，直接进入框选（勾选后屏幕即置灰）
+                if (v && (!this.properties.region || this.properties.region.length !== 4)) {
+                    doPickRegion();
+                }
+                this._updateRegionUI();
+            }, { property: "use_region" });
+
+            this.region_text_widget = this.addWidget("text", "范围", this._regionText(), null, { property: "_region_text" });
+            this.region_text_widget.disabled = true;
+
+            this.addWidget("button", "🎯 重新框选范围", null, () => {
+                this.properties.use_region = true;
+                if (this.region_widget) this.region_widget.value = true;
+                doPickRegion();
+            });
+
+            this.addWidget("button", "🧹 清除范围", null, () => {
+                this.properties.region = null;
+                this.properties.use_region = false;
+                if (this.region_widget) this.region_widget.value = false;
+                this._updateRegionUI();
+            });
+
+            this.title = "🔍 图像识别";
+            this.color = "#600080"; this.bgcolor = "#3a004d";
+            this.size = [250, 220];
+        }
+
+        RecognizeNode.prototype._regionText = function() {
+            var r = this.properties.region;
+            if (!r || r.length !== 4) return "未设置（整屏）";
+            return "X:" + r[0] + ", Y:" + r[1] + " → " + r[2] + ", " + r[3] + "  (" + (r[2] - r[0]) + "×" + (r[3] - r[1]) + ")";
+        };
+
+        RecognizeNode.prototype._updateRegionUI = function() {
+            if (this.region_text_widget) this.region_text_widget.value = this._regionText();
+            this.setDirtyCanvas(true, true);
+        };
+
+        RecognizeNode.prototype.onConfigure = function() {
+            this._updateRegionUI();
+        };
+        LiteGraph.registerNodeType("AutoTask/Recognize", RecognizeNode);
+
+        // ===== 多点找色节点 =====
+        function MultiColorNode() {
+            this.addInput("触发执行", LiteGraph.EVENT);
+            this.addOutput("✅ 找到", LiteGraph.EVENT);
+            this.addOutput("❌ 未找到", LiteGraph.EVENT);
+            this.addOutput("📍 坐标", "vector");
+            this.properties = {
+                points: [],          // [{x,y,dx,dy,color:[B,G,R]}]，第0个为主锚点
+                tolerance: 10,       // 每通道颜色容差
+                use_region: false,   // 是否限定范围
+                region: null,
+                last_result: "",
+                last_coords: null
+            };
+            var node = this;
+
+            this.addWidget("number", "颜色容差", this.properties.tolerance, (v) => { node.properties.tolerance = Math.round(v); }, { property: "tolerance", min: 0, max: 80, step: 1, precision: 0 });
+            this.addWidget("button", "🎨 拾取特征点", null, () => {
+                showColorPicker(function (pts) {
+                    if (pts && pts.length) {
+                        node.properties.points = pts;
+                        node.properties.last_result = "";
+                        node._updatePointUI();
+                    }
+                });
+            });
+
+            this.region_widget = this.addWidget("toggle", "限定查找范围", this.properties.use_region, (v) => {
+                node.properties.use_region = v;
+                if (v && (!node.properties.region || node.properties.region.length !== 4)) node._pickRegion();
+                node._updatePointUI();
+            }, { property: "use_region" });
+            this.addWidget("button", "🎯 重新框选范围", null, () => node._pickRegion());
+            this.addWidget("button", "🧹 清除", null, () => {
+                node.properties.points = [];
+                node.properties.last_result = "";
+                node.properties.last_coords = null;
+                node._updatePointUI();
+            });
+
+            this.point_text_widget = this.addWidget("text", "特征点", "", null, { property: "_point_text" });
+            this.point_text_widget.disabled = true;
+            this.status_widget = this.addWidget("text", "结果", "未拾取", null, { property: "_status" });
+            this.status_widget.disabled = true;
+
+            this.title = "🌈 多点找色";
+            this.color = "#b08d00"; this.bgcolor = "#5c4a00";
+            this.size = [260, 260];
+            this._updatePointUI();
+        }
+        MultiColorNode.prototype._pickRegion = function () {
+            var node = this;
+            showRegionPicker(function (box) {
+                if (box) {
+                    node.properties.region = box;
+                    node.properties.use_region = true;
+                }
+                node._updatePointUI();
+            });
+        };
+        MultiColorNode.prototype._pointSummary = function () {
+            var pts = this.properties.points || [];
+            if (!pts.length) return "未拾取（点“拾取特征点”）";
+            var s = "共 " + pts.length + " 点 · 容差±" + this.properties.tolerance;
+            for (var i = 0; i < pts.length && i < 8; i++) {
+                var p = pts[i], c = p.color || [0, 0, 0];
+                s += "\n" + (i === 0 ? "主" : (i + 1)) + ": (" + p.dx + "," + p.dy + ") #"
+                   + ('0'+c[2].toString(16)).slice(-2) + ('0'+c[1].toString(16)).slice(-2) + ('0'+c[0].toString(16)).slice(-2);
+            }
+            return s;
+        };
+        MultiColorNode.prototype._updatePointUI = function () {
+            if (this.point_text_widget) this.point_text_widget.value = this._pointSummary();
+            var r = this.properties.region;
+            var status = this.properties.last_result || "未运行";
+            if (this.properties.last_coords) status += " @" + this.properties.last_coords[0] + "," + this.properties.last_coords[1];
+            if (this.region_widget) {
+                var reg = (this.properties.use_region && r && r.length === 4)
+                    ? " · 范围 " + (r[2]-r[0]) + "×" + (r[3]-r[1]) : "";
+                status += reg;
+            }
+            if (this.status_widget) this.status_widget.value = status;
+            this.setDirtyCanvas(true, true);
+        };
+        MultiColorNode.prototype.onConfigure = function () { this._updatePointUI(); };
+        // 在节点底部画出特征点相对布局 + 色块，直观看到拾取的形状
+        MultiColorNode.prototype.onDrawBackground = function (ctx) {
+            var pts = this.properties.points || [];
+            if (!pts.length) return;
+            var h = this.size[1];
+            var xs = pts.map(function (p) { return p.dx; }), ys = pts.map(function (p) { return p.dy; });
+            var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+            var minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+            var spanX = Math.max(40, maxX - minX), spanY = Math.max(40, maxY - minY);
+            var areaW = 120, areaH = 46;
+            var ox = 12, oy = h - areaH - 8;
+            ctx.save();
+            ctx.fillStyle = "rgba(0,0,0,0.3)";
+            ctx.fillRect(4, oy - 4, this.size[0] - 8, areaH + 8);
+            var sx = areaW / spanX, sy = areaH / spanY, sc = Math.min(sx, sy, 1.5);
+            var baseX = ox + 8 + (areaW - spanX * sc) / 2;
+            var baseY = oy + (areaH - spanY * sc) / 2;
+            for (var i = 0; i < pts.length; i++) {
+                var p = pts[i], c = p.color || [0, 0, 0];
+                var px = baseX + (p.dx - minX) * sc, py = baseY + (p.dy - minY) * sc;
+                ctx.beginPath();
+                ctx.arc(px, py, i === 0 ? 6 : 4, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgb(' + c[2] + ',' + c[1] + ',' + c[0] + ')';
+                ctx.fill();
+                ctx.strokeStyle = i === 0 ? '#fff' : '#ffd54f';
+                ctx.lineWidth = i === 0 ? 2 : 1;
+                ctx.stroke();
+            }
+            ctx.restore();
+        };
+        LiteGraph.registerNodeType("AutoTask/MultiColor", MultiColorNode);
+
+        function CenterAimNode() {
+            this.addInput("触发执行", LiteGraph.EVENT);
+            this.addInput("目标图像", "image");
+            this.addOutput("到位完成", LiteGraph.EVENT);      // 输出0：成功把图像移到目标位置
+            this.addOutput("未到位", LiteGraph.EVENT);        // 输出1：识别失败/超限/卡死时的分支
+            this.properties = {
+                target_x: Math.round(window.screen.width / 2),   // 目标位置（屏幕绝对坐标），默认屏幕中心
+                target_y: Math.round(window.screen.height / 2),
+                mode: "view",                                // view=视角反向(FPS) / cursor=光标同向
+                gain: 1.0,                                   // 灵敏度补偿：鼠标移动1px≈画面移动gain px
+                speed_coef: 0.8,                             // 步进比例(0.05~1)，越小越稳但越慢
+                tolerance: 10,                               // 到位像素容差
+                confidence: 0.8,                             // 识别置信度阈值
+                max_iterations: 25,                          // 最大迭代次数
+                settle_ms: 120                               // 每次移动后等待画面稳定的毫秒数
+            };
+            var node = this;
+            var w_x = this.addWidget("number", "目标X", this.properties.target_x, (v) => { node.properties.target_x = Math.round(v); }, { property: "target_x", step: 1, precision: 0 });
+            var w_y = this.addWidget("number", "目标Y", this.properties.target_y, (v) => { node.properties.target_y = Math.round(v); }, { property: "target_y", step: 1, precision: 0 });
+            this.addWidget("button", "🎯 获取屏幕坐标", null, () => {
+                showCoordinatePicker((px, py) => {
+                    node.properties.target_x = Math.round(px);
+                    node.properties.target_y = Math.round(py);
+                    w_x.value = node.properties.target_x;
+                    w_y.value = node.properties.target_y;
+                    node.setDirtyCanvas(true, true);
+                });
+            });
+            this.addWidget("combo", "控制模式", this.properties.mode, (v) => { node.properties.mode = v; }, { property: "mode", values: ["view", "cursor"], titles: ["视角反向(FPS)", "光标同向"] });
+            this.addWidget("number", "灵敏度补偿", this.properties.gain, (v) => { node.properties.gain = v; }, { property: "gain", min: 0.1, max: 5.0, step: 0.05 });
+            this.addWidget("number", "步进比例", this.properties.speed_coef, (v) => { node.properties.speed_coef = v; }, { property: "speed_coef", min: 0.05, max: 1.0, step: 0.05 });
+            this.addWidget("number", "到位容差", this.properties.tolerance, (v) => { node.properties.tolerance = Math.round(v); }, { property: "tolerance", min: 1, max: 100, step: 1, precision: 0 });
+            this.addWidget("number", "识别阈值", this.properties.confidence, (v) => { node.properties.confidence = v; }, { property: "confidence", min: 0.1, max: 1.0, step: 0.05 });
+            this.addWidget("number", "最大次数", this.properties.max_iterations, (v) => { node.properties.max_iterations = Math.round(v); }, { property: "max_iterations", min: 5, max: 100, step: 1, precision: 0 });
+            this.addWidget("number", "稳定等待ms", this.properties.settle_ms, (v) => { node.properties.settle_ms = Math.round(v); }, { property: "settle_ms", min: 0, max: 1000, step: 20, precision: 0 });
+            this.title = "🎯 智能置中";
+            this.color = "#8b0000"; this.bgcolor = "#5a0000";
+            this.size = [260, 340];
+        }
+        LiteGraph.registerNodeType("AutoTask/CenterAim", CenterAimNode);
+
+        function CoordinateNode() {
+            this.addOutput("坐标向量", "vector");
+            this.properties = { x: 0, y: 0 };
+            
+            var w_x = this.addWidget("number", "X", this.properties.x, (v) => { this.properties.x = Math.round(v); }, { property: "x", step: 1, precision: 0 });
+            var w_y = this.addWidget("number", "Y", this.properties.y, (v) => { this.properties.y = Math.round(v); }, { property: "y", step: 1, precision: 0 });
+            
+            this.addWidget("button", "🎯 获取屏幕坐标", null, () => {
+                showCoordinatePicker((px, py) => {
+                    this.properties.x = Math.round(px);
+                    this.properties.y = Math.round(py);
+                    w_x.value = this.properties.x;
+                    w_y.value = this.properties.y;
+                    this.setDirtyCanvas(true, true);
+                });
+            });
+            this.title = "📍 坐标提取";
+            this.color = "#0055a4"; this.bgcolor = "#003366";
+            this.size = [200, 140];
+        }
+        LiteGraph.registerNodeType("AutoTask/Coordinate", CoordinateNode);
+
+        function VectorMathNode() {
+            this.addInput("向量A", "vector");
+            this.addInput("向量B", "vector");
+            this.addOutput("结果", "vector");
+            this.properties = { math_type: "差向量" };
+            this.addWidget("combo", "计算类型", this.properties.math_type, (v) => { this.properties.math_type = v; }, { property: "math_type", values: ["差向量", "和向量", "模长"] });
+            this.title = "🧮 向量计算";
+            this.color = "#0055a4"; this.bgcolor = "#003366";
+        }
+        LiteGraph.registerNodeType("AutoTask/VectorMath", VectorMathNode);
+
+        function CurrentMouseNode() {
+            this.addOutput("位置", "vector");
+            this.title = "🖱️ 当前指针位置";
+            this.color = "#0055a4"; this.bgcolor = "#003366";
+        }
+        LiteGraph.registerNodeType("AutoTask/CurrentMouse", CurrentMouseNode);
+
+        function MouseDownNode() {
+            this.addInput("触发执行", LiteGraph.EVENT);
+            this.addOutput("完成后", LiteGraph.EVENT);
+            this.properties = { button: "left" };
+            this.addWidget("combo", "按键", this.properties.button, (v) => { this.properties.button = v; }, { property: "button", values: ["left", "right", "middle"] });
+            this.title = "🔽 鼠标按下";
+            this.color = "#8b0000"; this.bgcolor = "#5a0000";
+        }
+        LiteGraph.registerNodeType("AutoTask/MouseDown", MouseDownNode);
+
+        function MouseUpNode() {
+            this.addInput("触发执行", LiteGraph.EVENT);
+            this.addOutput("完成后", LiteGraph.EVENT);
+            this.properties = { button: "left" };
+            this.addWidget("combo", "按键", this.properties.button, (v) => { this.properties.button = v; }, { property: "button", values: ["left", "right", "middle"] });
+            this.title = "🔼 鼠标抬起";
+            this.color = "#8b0000"; this.bgcolor = "#5a0000";
+        }
+        LiteGraph.registerNodeType("AutoTask/MouseUp", MouseUpNode);
+
+        function MouseMoveNode() {
+            this.addInput("触发执行", LiteGraph.EVENT);
+            this.addInput("起点", "vector");
+            this.addInput("终点", "vector");
+            this.addOutput("完成后", LiteGraph.EVENT);
+            this.properties = { duration: 1000, jitter: 0 };
+            this.addWidget("number", "时长(ms)", this.properties.duration, (v) => { this.properties.duration = Math.round(v); }, { property: "duration", min: 0, max: 60000, step: 100, precision: 0 });
+            this.addWidget("number", "抖动值", this.properties.jitter, (v) => { this.properties.jitter = Math.round(v); }, { property: "jitter", min: 0, max: 10, step: 1, precision: 0 });
+            this.title = "↗️ 鼠标移动";
+            this.color = "#8b0000"; this.bgcolor = "#5a0000";
+            this.size = [200, 160];
+        }
+        LiteGraph.registerNodeType("AutoTask/MouseMove", MouseMoveNode);
+
+        function MouseClickNode() {
+            this.addInput("触发执行", LiteGraph.EVENT);
+            this.addOutput("完成后", LiteGraph.EVENT);
+            this.properties = { button: "left", pre_delay: 0, duration: 50, post_delay: 50 };
+            
+            this.addWidget("combo", "鼠标按键", this.properties.button, (v) => { this.properties.button = v; }, { property: "button", values: ["left", "right", "middle"] });
+            this.addWidget("number", "点击前延迟(ms)", this.properties.pre_delay, (v) => { this.properties.pre_delay = Math.round(v); }, { property: "pre_delay", min: 0, max: 10000, step: 10, precision: 0 });
+            this.addWidget("number", "点击时长(ms)", this.properties.duration, (v) => { this.properties.duration = Math.round(v); }, { property: "duration", min: 0, max: 10000, step: 10, precision: 0 });
+            this.addWidget("number", "点击后延迟(ms)", this.properties.post_delay, (v) => { this.properties.post_delay = Math.round(v); }, { property: "post_delay", min: 0, max: 10000, step: 10, precision: 0 });
+
+            this.title = "🖱️ 鼠标点击";
+            this.color = "#8b0000"; this.bgcolor = "#5a0000";
+            this.size = [240, 200];
+        }
+        LiteGraph.registerNodeType("AutoTask/MouseClick", MouseClickNode);
+
+        function KeyPressNode() {
+            this.addInput("触发执行", LiteGraph.EVENT);
+            this.addOutput("完成后", LiteGraph.EVENT);
+            this.properties = { key: "space", pre_delay: 0, duration: 50, post_delay: 50 };
+            
+            this.key_widget = this.addWidget("text", "指定按键", this.properties.key, null, { property: "key" });
+            this.key_widget.disabled = true;
+            this.addWidget("button", "⌨️ 录制按键", null, () => {
+                recordKey((keyStr) => {
+                    this.properties.key = keyStr;
+                    this.key_widget.value = keyStr;
+                    if(this.combo_widget) this.combo_widget.value = keyStr.toLowerCase();
+                    this.setDirtyCanvas(true, true);
+                });
+            });
+            this.combo_widget = this.addWidget("combo", "常用按键", this.properties.key.toLowerCase(), (v) => {
+                this.properties.key = v;
+                this.key_widget.value = v;
+                this.setDirtyCanvas(true, true);
+            }, { values: ["space", "enter", "ctrl", "shift", "alt", "win", "esc"] });
+            
+            this.addWidget("number", "按键前延迟(ms)", this.properties.pre_delay, (v) => { this.properties.pre_delay = Math.round(v); }, { property: "pre_delay", min: 0, max: 10000, step: 10, precision: 0 });
+            this.addWidget("number", "按键时长(ms)", this.properties.duration, (v) => { this.properties.duration = Math.round(v); }, { property: "duration", min: 0, max: 10000, step: 10, precision: 0 });
+            this.addWidget("number", "按键后延迟(ms)", this.properties.post_delay, (v) => { this.properties.post_delay = Math.round(v); }, { property: "post_delay", min: 0, max: 10000, step: 10, precision: 0 });
+
+            this.title = "⌨️ 键盘点击";
+            this.color = "#8b0000"; this.bgcolor = "#5a0000";
+            this.size = [240, 240];
+        }
+        KeyPressNode.prototype.onConfigure = function() {
+            if(this.key_widget) this.key_widget.value = this.properties.key;
+            if(this.combo_widget) this.combo_widget.value = this.properties.key.toLowerCase();
+        };
+        LiteGraph.registerNodeType("AutoTask/KeyPress", KeyPressNode);
+
+        function KeyDownNode() {
+            this.addInput("触发执行", LiteGraph.EVENT);
+            this.addOutput("完成后", LiteGraph.EVENT);
+            this.properties = { key: "space" };
+            this.key_widget = this.addWidget("text", "指定按键", this.properties.key, null, { property: "key" });
+            this.key_widget.disabled = true;
+            this.addWidget("button", "⌨️ 录制按键", null, () => {
+                recordKey((keyStr) => {
+                    this.properties.key = keyStr;
+                    this.key_widget.value = keyStr;
+                    if(this.combo_widget) this.combo_widget.value = keyStr.toLowerCase();
+                    this.setDirtyCanvas(true, true);
+                });
+            });
+            this.combo_widget = this.addWidget("combo", "常用按键", this.properties.key.toLowerCase(), (v) => {
+                this.properties.key = v;
+                this.key_widget.value = v;
+                this.setDirtyCanvas(true, true);
+            }, { values: ["space", "enter", "ctrl", "shift", "alt", "win", "esc"] });
+            this.title = "⬇️ 键盘按下";
+            this.color = "#8b0000"; this.bgcolor = "#5a0000";
+            this.size = [220, 160];
+        }
+        KeyDownNode.prototype.onConfigure = function() {
+            if(this.key_widget) this.key_widget.value = this.properties.key;
+            if(this.combo_widget) this.combo_widget.value = this.properties.key.toLowerCase();
+        };
+        LiteGraph.registerNodeType("AutoTask/KeyDown", KeyDownNode);
+
+        function KeyUpNode() {
+            this.addInput("触发执行", LiteGraph.EVENT);
+            this.addOutput("完成后", LiteGraph.EVENT);
+            this.properties = { key: "space" };
+            this.key_widget = this.addWidget("text", "指定按键", this.properties.key, null, { property: "key" });
+            this.key_widget.disabled = true;
+            this.addWidget("button", "⌨️ 录制按键", null, () => {
+                recordKey((keyStr) => {
+                    this.properties.key = keyStr;
+                    this.key_widget.value = keyStr;
+                    if(this.combo_widget) this.combo_widget.value = keyStr.toLowerCase();
+                    this.setDirtyCanvas(true, true);
+                });
+            });
+            this.combo_widget = this.addWidget("combo", "常用按键", this.properties.key.toLowerCase(), (v) => {
+                this.properties.key = v;
+                this.key_widget.value = v;
+                this.setDirtyCanvas(true, true);
+            }, { values: ["space", "enter", "ctrl", "shift", "alt", "win", "esc"] });
+            this.title = "⬆️ 键盘抬起";
+            this.color = "#8b0000"; this.bgcolor = "#5a0000";
+            this.size = [220, 160];
+        }
+        KeyUpNode.prototype.onConfigure = function() {
+            if(this.key_widget) this.key_widget.value = this.properties.key;
+            if(this.combo_widget) this.combo_widget.value = this.properties.key.toLowerCase();
+        };
+        LiteGraph.registerNodeType("AutoTask/KeyUp", KeyUpNode);
+
+        var pendingCoordinateCallback = null;
+        function showCoordinatePicker(callback) {
+            pendingCoordinateCallback = callback;
+            ws.send(JSON.stringify({ action: "pick_coordinate" }));
+        }
+
+        // 【新增】识别范围框选：后端会弹出置灰全屏覆盖层，左键拖拽出矩形
+        var pendingRegionCallback = null;
+        function showRegionPicker(callback) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert("后端未连接，无法框选识别范围！");
+                return;
+            }
+            pendingRegionCallback = callback;
+            ws.send(JSON.stringify({ action: "pick_region" }));
+        }
+
+        // 多点找色：后端全屏拾色，依次点选特征点（第1个为主锚点）
+        var pendingColorsCallback = null;
+        function showColorPicker(callback) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert("后端未连接，无法拾取颜色！");
+                return;
+            }
+            pendingColorsCallback = callback;
+            ws.send(JSON.stringify({ action: "pick_colors" }));
+        }
+
+        // ----- MacroScriptNode（常驻可编辑文本框） -----
+        function MacroScriptNode() {
+            this.addInput("执行流", LiteGraph.EVENT);
+            this.addOutput("完成后", LiteGraph.EVENT);
+            this.properties = { script_text: "" };
+            this.size = [270, 360];
+            this.redraw_on_mouse = true;
+
+            this._textarea = null;
+            this._isAttached = false;
+
+            this.title = "🔴 动作宏节点";
+            this.color = "#8b0000";
+            this.bgcolor = "#4a0000";
+
+            // 更新按钮标签
+            this.updateRecordButtonState = function() {
+                this._buttonLabel = (this.properties.script_text && this.properties.script_text.trim().length > 0)
+                    ? "🔄 重录"
+                    : "🔴 录制";
+                this.setDirtyCanvas(true, true);
+            }.bind(this);
+            this.updateRecordButtonState();
+
+            // 创建 textarea（此时不添加到 DOM）
+            this._createTextArea();
+
+            // 自定义绘制（不再绘制文字，只画背景和按钮）
+            this.onDrawForeground = this._drawNode.bind(this);
+            this.onMouseDown = this._handleMouseDown.bind(this);
+            this.onMouseMove = this._handleMouseMove.bind(this);
+            this.onRemoved = this._cleanup.bind(this);
+            this.onAdded = this._onAdded.bind(this);
+        }
+
+        MacroScriptNode.prototype.computeSize = function() {
+            return [270, 360];
+        };
+
+        // ---------- 创建 textarea ----------
+        MacroScriptNode.prototype._createTextArea = function() {
+            if (this._textarea) return;
+            const ta = document.createElement("textarea");
+            ta.style.position = "absolute";     // 【修复】改为基于父容器的绝对定位
+            ta.style.display = "none";          // 先隐藏，等 onAdded 时显示
+            ta.style.font = "12px Consolas, monospace";
+            ta.style.backgroundColor = "#1a1a1a";
+            ta.style.color = "#ddd";
+            ta.style.border = "1px solid #555";
+            ta.style.outline = "none";
+            ta.style.resize = "none";
+            ta.style.padding = "4px";
+            ta.style.boxSizing = "border-box";
+            ta.style.overflow = "auto";
+            ta.spellcheck = false;
+            ta.value = this.properties.script_text || "";
+
+            // 阻止事件冒泡，避免干扰画布交互
+            ta.addEventListener("wheel", function(e) {
+                e.stopPropagation();   // 滚动不触发画布缩放
+            });
+            ta.addEventListener("mousedown", function(e) {
+                e.stopPropagation();   // 点击不触发节点拖动
+            });
+            ta.addEventListener("mouseup", function(e) {
+                e.stopPropagation();
+            });
+
+            // 内容变化时同步到 properties
+            ta.addEventListener("input", function() {
+                this.properties.script_text = ta.value;
+                this.updateRecordButtonState();
+                this.setDirtyCanvas(true, true);
+                markProjectDirty();
+            }.bind(this));
+
+            this._textarea = ta;
+            document.getElementById("canvas-container").appendChild(ta); // 【修复】绑定至画布容器中
+        };
+        
+        MacroScriptNode.prototype._syncTextArea = function() {
+            if (this._textarea) {
+                this._textarea.value = this.properties.script_text || "";
+            }
+        };
+        
+        MacroScriptNode.prototype._onAdded = function() {
+            this._isAttached = true;
+            if (this._textarea) {
+                this._textarea.style.display = "block";
+            }
+            this.setDirtyCanvas(true, true);
+        };
+
+        // ---------- 更新 textarea 位置和大小 ----------
+        MacroScriptNode.prototype._updateTextAreaPosition = function(graphcanvas) {
+            if (!this._textarea || !this._isAttached) return;
+
+            const ds = graphcanvas.ds;
+            const scale = ds.scale;
+            const offsetX = ds.offset[0];
+            const offsetY = ds.offset[1];
+
+            const margin = 10;
+            const topOffset = 35;              // 与绘制时的 textAreaY 一致
+            const bottomReserve = 50;          // 底部按钮区域高度
+
+            // 【修复】相对于 canvas-container 计算位置，去除冗余的视口顶角偏移
+            const screenX = (this.pos[0] + offsetX) * scale;
+            const screenY = (this.pos[1] + offsetY) * scale;
+            const left = screenX + margin * scale;
+            const top = screenY + topOffset * scale;
+
+            const w = (this.size[0] - margin * 2) * scale;
+            const h = (this.size[1] - topOffset - margin - bottomReserve) * scale;
+
+            // 视口尺寸（CSS 像素），用于判断节点是否还在画布可见区域内
+            const vpW = graphcanvas.canvas.clientWidth || graphcanvas.canvas.width;
+            const vpH = graphcanvas.canvas.clientHeight || graphcanvas.canvas.height;
+
+            // 节点移出视口时隐藏输入框，避免它冻结在旧位置并遮挡节点库等页面其它区域
+            if (left + w < 0 || top + h < 0 || left > vpW || top > vpH) {
+                this._textarea.style.display = "none";
+                return;
+            }
+            this._textarea.style.display = "block";
+
+            this._textarea.style.left = left + "px";
+            this._textarea.style.top = top + "px";
+            this._textarea.style.width = Math.max(w, 50) + "px";
+            this._textarea.style.height = Math.max(h, 50) + "px";
+            this._textarea.style.fontSize = (12 * scale) + "px"; // 动态缩放文本字号
+        };
+
+        // ---------- 绘制 ----------
+        MacroScriptNode.prototype._drawNode = function(ctx) {
+            const node = this;
+
+            // 【核心修复】在节点的每帧绘制生命周期中强制更新坐标，确保拖拽和缩放时严丝合缝
+            if (node.graph && node.graph.list_of_graphcanvas && node.graph.list_of_graphcanvas[0]) {
+                node._updateTextAreaPosition(node.graph.list_of_graphcanvas[0]);
+            }
+
+            const size = node.size;
+            const margin = 10;
+            const textAreaX = margin;
+            const textAreaY = 35;               // 顶部留出标题空间
+            const textAreaW = size[0] - margin * 2;
+            const textAreaH = size[1] - textAreaY - margin - 50;
+            const buttonY = textAreaY + textAreaH + 10;
+            const buttonH = 30;
+            const buttonW = 80;
+            const buttonX = (size[0] - buttonW) / 2;
+
+            node._textAreaRect = { x: textAreaX, y: textAreaY, w: textAreaW, h: textAreaH };
+            node._buttonRect = { x: buttonX, y: buttonY, w: buttonW, h: buttonH };
+
+            // 1. 文本框背景（只画背景，文字由 textarea 负责）
+            ctx.fillStyle = "#1a1a1a";
+            ctx.shadowColor = "transparent";
+            ctx.fillRect(textAreaX, textAreaY, textAreaW, textAreaH);
+            ctx.strokeStyle = "#555";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(textAreaX, textAreaY, textAreaW, textAreaH);
+
+            // 2. 录制按钮
+            const bgColor = node._buttonHover ? "#777" : "#555";
+            ctx.fillStyle = bgColor;
+            ctx.shadowColor = "transparent";
+            ctx.fillRect(buttonX, buttonY, buttonW, buttonH);
+            ctx.strokeStyle = "#888";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(buttonX, buttonY, buttonW, buttonH);
+
+            ctx.fillStyle = "#eee";
+            ctx.font = "13px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(node._buttonLabel, buttonX + buttonW/2, buttonY + buttonH/2);
+        };
+
+        // ---------- 鼠标事件 ----------
+        MacroScriptNode.prototype._handleMouseDown = function(e, localpos, graphcanvas) {
+            const node = this;
+            if (!node._buttonRect) return false;
+
+            const x = localpos[0];
+            const y = localpos[1];
+            const br = node._buttonRect;
+
+            // 点击按钮 → 录制
+            if (x >= br.x && x <= br.x + br.w && y >= br.y && y <= br.y + br.h) {
+                startGlobalMacroRecorder(node);
+                return true;
+            }
+
+            // 点击文本框区域 → 聚焦 textarea（方便用户直接键盘输入）
+            const tr = node._textAreaRect;
+            if (x >= tr.x && x <= tr.x + tr.w && y >= tr.y && y <= tr.y + tr.h) {
+                if (node._textarea) {
+                    node._textarea.focus();
+                }
+                return true;
+            }
+
+            return false;
+        };
+
+        MacroScriptNode.prototype._handleMouseMove = function(e, localpos, graphcanvas) {
+            const node = this;
+            if (!node._buttonRect) return;
+            const x = localpos[0];
+            const y = localpos[1];
+            const br = node._buttonRect;
+            const hover = (x >= br.x && x <= br.x + br.w && y >= br.y && y <= br.y + br.h);
+            if (node._buttonHover !== hover) {
+                node._buttonHover = hover;
+                node.setDirtyCanvas(true, true);
+            }
+
+            // 更新 textarea 位置（画布移动或缩放时）
+            node._updateTextAreaPosition(graphcanvas);
+        };
+
+        // ---------- 清理 ----------
+        MacroScriptNode.prototype._cleanup = function() {
+            this._isAttached = false;
+            if (this._textarea && this._textarea.parentNode) {
+                this._textarea.parentNode.removeChild(this._textarea);
+            }
+            this._textarea = null;
+        };
+
+        // ---------- 每次画布重绘时更新 textarea 位置 ----------
+        // 通过覆盖 onDrawForeground 和 onDrawBackground 无法保证每帧都调用，
+        // 所以我们在 graphcanvas 的 onDrawOverlay 中更新，但那样太侵入。
+        // 更好的方式：在节点的 onExecute 中更新（每帧执行）。
+        MacroScriptNode.prototype.onExecute = function() {
+            // 如果节点在画布中，且画布存在，更新 textarea 位置
+            if (this.graph && this.graph.list_of_graphcanvas) {
+                const canvas = this.graph.list_of_graphcanvas[0];
+                if (canvas) {
+                    this._updateTextAreaPosition(canvas);
+                }
+            }
+        };
+
+        // 【新增】当从文件加载保存的数据时，将属性中的文本同步给多行文本框
+        MacroScriptNode.prototype.onConfigure = function(info) {
+            if (this._textarea) {
+                this._textarea.value = this.properties.script_text || "";
+            }
+            this.updateRecordButtonState();
+        };
+
+        // 重新注册（确保只注册一次）
+        LiteGraph.registerNodeType("AutoTask/MacroScript", MacroScriptNode);
+
+        var activeMacroNodeToRecord = null;
+
+        function startGlobalMacroRecorder(nodeInstance) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert("后端未连接，无法录制宏动作！");
+                return;
+            }
+            activeMacroNodeToRecord = nodeInstance || null;
+            ws.send(JSON.stringify({ action: "start_macro_record" }));
+        }
+
+        document.getElementById("recordMacroBtn").onclick = function() {
+            var node = LiteGraph.createNode("AutoTask/MacroScript");
+            var centerX = (canvas.canvas.width / 2) / canvas.ds.scale - canvas.ds.offset[0] - node.size[0] / 2;
+            var centerY = (canvas.canvas.height / 2) / canvas.ds.scale - canvas.ds.offset[1] - node.size[1] / 2;
+            node.pos = [centerX, centerY];
+            graph.add(node);
+            startGlobalMacroRecorder(node);
+        };
+
+        function recordKey(callback) {
+            var overlay = document.createElement("div");
+            overlay.style.position = "fixed";
+            overlay.style.top = "0"; overlay.style.left = "0";
+            overlay.style.width = "100vw"; overlay.style.height = "100vh";
+            overlay.style.backgroundColor = "rgba(0,0,0,0.8)";
+            overlay.style.zIndex = "9999";
+            overlay.style.display = "flex";
+            overlay.style.justifyContent = "center";
+            overlay.style.alignItems = "center";
+            overlay.style.color = "white";
+            overlay.style.fontSize = "24px";
+            overlay.innerText = "请按下快捷键组合，松开按键结束录制\n（按 ESC 键取消退出）";
+            
+            var keys_pressed = new Set();
+            var key_string = "";
+            
+            var cleanup = function() {
+                document.removeEventListener("keydown", keydown_handler, true);
+                document.removeEventListener("keyup", keyup_handler, true);
+                if (document.body.contains(overlay)) document.body.removeChild(overlay);
+            };
+            
+            var keydown_handler = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var key = e.key.toUpperCase();
+                
+                if (key === "ESCAPE") {
+                    cleanup();
+                    return;
+                }
+                
+                if (key === "CONTROL") key = "CTRL";
+                if (key === " " || key === "SPACEBAR") key = "SPACE";
+                if (key === "META" || key === "OS") key = "WIN";
+                keys_pressed.add(key);
+                
+                var arr = [];
+                if (e.ctrlKey) arr.push("CTRL");
+                if (e.altKey) arr.push("ALT");
+                if (e.shiftKey) arr.push("SHIFT");
+                if (e.metaKey) arr.push("WIN");
+                
+                var main_key = key;
+                if (!["CTRL", "ALT", "SHIFT", "WIN"].includes(main_key)) {
+                    arr.push(main_key);
+                }
+                key_string = arr.join("+");
+                overlay.innerText = "已录制: " + key_string + "\n(松开所有按键以确认，按 ESC 取消)";
+            };
+            
+            var keyup_handler = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var key = e.key.toUpperCase();
+                
+                if (key === "CONTROL") key = "CTRL";
+                if (key === " " || key === "SPACEBAR") key = "SPACE";
+                if (key === "META" || key === "OS") key = "WIN";
+                keys_pressed.delete(key);
+                
+                if (keys_pressed.size === 0 && key_string !== "") {
+                    cleanup();
+                    callback(key_string);
+                }
+            };
+            
+            document.addEventListener("keydown", keydown_handler, true);
+            document.addEventListener("keyup", keyup_handler, true);
+            document.body.appendChild(overlay);
+        }
+
+        function DelayNode() {
+            this.addInput("执行输入", LiteGraph.EVENT);
+            this.addOutput("延时结束", LiteGraph.EVENT);
+            this.properties = {
+                delay_ms: 1000,
+                random: false,
+                min_ms: 500,
+                max_ms: 2000
+            };
+
+            this.random_widget = this.addWidget("toggle", "每次随机", this.properties.random, (v) => {
+                this.properties.random = v;
+                this._updateDelayWidgets();
+            }, { property: "random" });
+
+            this.title = "⏳ 延迟";
+            this.color = "#4d4d4d"; this.bgcolor = "#222222";
+
+            this._updateDelayWidgets();
+        }
+
+        DelayNode.prototype._updateDelayWidgets = function () {
+            var idx = this.widgets.indexOf(this.random_widget);
+            while (this.widgets.length > idx + 1) {
+                this.widgets.pop();
+            }
+
+            if (this.properties.random) {
+                this.addWidget("number", "最小(ms)", this.properties.min_ms, (v) => { this.properties.min_ms = Math.round(v); }, { property: "min_ms", min: 0, max: 60000, step: 100, precision: 0 });
+                this.addWidget("number", "最大(ms)", this.properties.max_ms, (v) => { this.properties.max_ms = Math.round(v); }, { property: "max_ms", min: 0, max: 60000, step: 100, precision: 0 });
+            } else {
+                this.addWidget("number", "延时(ms)", this.properties.delay_ms, (v) => { this.properties.delay_ms = Math.round(v); }, { property: "delay_ms", min: 0, max: 60000, step: 100, precision: 0 });
+            }
+
+            this.setSize(this.computeSize());
+            this.setDirtyCanvas(true, true);
+        };
+        // 加载后按已保存的 random 状态重建子控件（否则会停留为默认“延时(ms)”）
+        DelayNode.prototype.onConfigure = function () {
+            this._updateDelayWidgets();
+        };
+        LiteGraph.registerNodeType("AutoTask/Delay", DelayNode);
+
+        function CounterNode() {
+            this.addInput("执行流", LiteGraph.EVENT);
+            this.addInput("数字输入", "*");   // 可接任何输出：后端按数字/数组首元素解析
+            this.addOutput("计数之内", LiteGraph.EVENT);
+            this.addOutput("超过计数", LiteGraph.EVENT);
+            this.properties = { max_count: 5, current_count: 0 };
+            this.addWidget("number", "最大次数", this.properties.max_count, (v) => { this.properties.max_count = Math.round(v); }, { property: "max_count", min: 1, max: 9999, step: 1, precision: 0 });
+            this.title = "🔢 计数";
+            this.color = "#00802b"; this.bgcolor = "#004d1a";
+            this.size = [170, 110];
+        }
+        // 节点底部实时显示当前计数次数
+        CounterNode.prototype.onDrawBackground = function(ctx) {
+            var h = this.size[1];
+            var cur = this.properties.current_count || 0;
+            var maxv = this.properties.max_count || 0;
+            ctx.save();
+            ctx.fillStyle = "rgba(0,0,0,0.28)";
+            ctx.fillRect(0, h - 34, this.size[0], 34);
+            ctx.fillStyle = "#7dffb0";
+            ctx.font = "bold 18px Microsoft YaHei, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("已计数 " + cur + " / " + maxv, this.size[0] / 2, h - 17);
+            ctx.restore();
+        };
+        LiteGraph.registerNodeType("AutoTask/Counter", CounterNode);
+
+        function ReturnToNode() {
+            this.addInput("执行输入", LiteGraph.EVENT); 
+            this.addInput("接收循环", LiteGraph.EVENT, { dir: LiteGraph.UP, pos: [70, -30] }); 
+            this.addOutput("向下执行", LiteGraph.EVENT); 
+            
+            this.title = "↩️ 返回至 (锚点)";
+            this.color = "#00802b"; this.bgcolor = "#004d1a";
+            this.size = [140, 60]; 
+            this.resizable = false; 
+        }
+
+        ReturnToNode.prototype.updateTopPorts = function() {
+            var empty_count = 0;
+            for (var i = this.inputs.length - 1; i >= 1; --i) {
+                if (this.inputs[i].link === null) {
+                    empty_count++;
+                    if (empty_count > 1) this.removeInput(i);
+                }
+            }
+            if (empty_count === 0) {
+                this.addInput("接收循环", LiteGraph.EVENT, { dir: LiteGraph.UP });
+            }
+            var loop_ports_count = this.inputs.length - 1;
+            var spacing = 15; 
+            var start_x = 70 - ((loop_ports_count - 1) * spacing) / 2;
+            for (var i = 1; i < this.inputs.length; ++i) {
+                this.inputs[i].pos = [start_x + (i - 1) * spacing, -30];
+            }
+            this.setDirtyCanvas(true, true);
+        };
+
+        ReturnToNode.prototype.onConnectionsChange = function(type, slot, connected, link_info, input_info) {
+            if (type === LiteGraph.INPUT) this.updateTopPorts();
+        };
+
+        ReturnToNode.prototype.onConfigure = function(info) { this.updateTopPorts(); };
+        LiteGraph.registerNodeType("AutoTask/ReturnTo", ReturnToNode);
+
+        function ReturnNode() {
+            this.addInput("执行流", LiteGraph.EVENT);
+            this.addOutput("触发循环", LiteGraph.EVENT, { dir: LiteGraph.UP, pos: [70, -30] }); 
+
+            this.properties = { delay_ms: 0 };
+            this.addWidget("number", "延迟(ms)", this.properties.delay_ms, (v) => { this.properties.delay_ms = Math.round(v); }, { property: "delay_ms", min: 0, max: 60000, step: 100, precision: 0 });
+            
+            this.title = "↪️ 返回 (跳跃)";
+            this.color = "#00802b"; this.bgcolor = "#004d1a";
+            this.size = [180, 100];
+            // 允许拖动右下角缩放，内容多时可自行拉大，避免文字重叠
+            this.resizable = true;
+        }
+        LiteGraph.registerNodeType("AutoTask/Return", ReturnNode);
+
+        var original_processContextMenu = canvas.processContextMenu;
+        canvas.processContextMenu = function(node, event) {
+            if (this.is_running_lock) return;
+            if (node) {
+                if (original_processContextMenu) {
+                    original_processContextMenu.call(this, node, event);
+                }
+            } else {
+                var entries = [
+                    { content: "▶ 开始", value: "AutoTask/Start" },
+                    { content: "⏹ 结束", value: "AutoTask/End" },
+                    { content: "🖼️ 图片", value: "AutoTask/Image" },
+                    { content: "🔍 图像识别", value: "AutoTask/Recognize" },
+                    { content: "🌈 多点找色", value: "AutoTask/MultiColor" },
+                    { content: "🎯 智能置中", value: "AutoTask/CenterAim" },
+                    { content: "🖱️ 鼠标点击", value: "AutoTask/MouseClick" },
+                    { content: "🔽 鼠标按下", value: "AutoTask/MouseDown" },
+                    { content: "🔼 鼠标抬起", value: "AutoTask/MouseUp" },
+                    { content: "↗️ 鼠标移动", value: "AutoTask/MouseMove" },
+                    { content: "⌨️ 键盘点击", value: "AutoTask/KeyPress" },
+                    { content: "⬇️ 键盘按下", value: "AutoTask/KeyDown" },
+                    { content: "⬆️ 键盘抬起", value: "AutoTask/KeyUp" },
+                    { content: "🔴 动作宏节点", value: "AutoTask/MacroScript" },
+                    { content: "📍 坐标提取", value: "AutoTask/Coordinate" },
+                    { content: "🧮 向量计算", value: "AutoTask/VectorMath" },
+                    { content: "🖱️ 当前指针", value: "AutoTask/CurrentMouse" },
+                    { content: "↩️ 返回至(锚点)", value: "AutoTask/ReturnTo" },
+                    { content: "↪️ 返回(跳跃)", value: "AutoTask/Return" },
+                    { content: "🔢 计数器", value: "AutoTask/Counter" },
+                    { content: "⏳ 延迟", value: "AutoTask/Delay" }
+                ];
+                new LiteGraph.ContextMenu(entries, {
+                    event: event,
+                    callback: function(v) {
+                        graph.beforeChange();
+                        var new_node = LiteGraph.createNode(v.value);
+                        if (new_node) {
+                            new_node.pos = canvas.convertEventToCanvasOffset(event);
+                            graph.add(new_node);
+                        }
+                        graph.afterChange();
+                    }
+                }, canvas.getCanvasWindow());
+            }
+        };
+
+        // 【修复】运行期间锁死工具条，避免运行中还能新建/加载/导出/录宏
+        function setToolbarLocked(locked) {
+            ["recordMacroBtn", "saveBtn", "saveAsBtn", "loadBtn", "newBtn"].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                el.disabled = locked;
+                el.style.opacity = locked ? "0.4" : "1";
+                el.style.pointerEvents = locked ? "none" : "auto";
+            });
+        }
+
+        // 【修复】断线自动重连：后端重启或崩溃后无需手动关闭重开窗口
+        var ws = null;
+        var pendingSaveResolver = null;   // 保存并等待结果（未保存提示的“保存”按钮用）
+        var pendingSaveTimer = null;
+        function setupWebSocket() {
+            ws = new WebSocket("ws://" + window.location.host + "/ws");
+            
+            ws.onopen = function() {
+                setStatus("🟡 已就绪 (Ready)", "ready");
+                last_hotkeys = ""; // 重连后重新把热键同步给后端
+                ws.send(JSON.stringify({ action: "get_recent" })); // 拉取最近项目列表
+            };
+            
+            ws.onclose = function() {
+                setStatus("🔴 已断开，2 秒后自动重连...", "off");
+                
+                document.getElementById("node-panel").style.pointerEvents = "auto";
+                document.getElementById("node-panel").style.opacity = "1";
+                canvas.read_only = false;
+                canvas.is_running_lock = false;
+                setToolbarLocked(false);
+                setTimeout(setupWebSocket, 2000);
+            };
+            
+            ws.onmessage = handleWsMessage;
+        }
+
+        function resolvePendingSave(ok, message) {
+            if (pendingSaveTimer) { clearTimeout(pendingSaveTimer); pendingSaveTimer = null; }
+            var resolver = pendingSaveResolver;
+            pendingSaveResolver = null;
+            if (!ok && message) toast(message, true);
+            if (resolver) resolver(ok);
+        }
+
+        function handleWsMessage(event) {
+            var data = JSON.parse(event.data);
+            if(data.status === "running") {
+                setStatus("🟢 正在运行 (Running...)", "run");
+                document.getElementById("log-console").innerHTML = '';
+                canvas.executing_node_id = null; 
+                
+                document.getElementById("node-panel").style.pointerEvents = "none";
+                document.getElementById("node-panel").style.opacity = "0.4";
+                canvas.read_only = true;
+                canvas.is_running_lock = true;
+                setToolbarLocked(true);
+                
+            } else if(data.status === "stopped") {
+                setStatus("🟡 已就绪 (Ready)", "ready");
+                canvas.executing_node_id = null; 
+                canvas.setDirty(true, true);
+                
+                document.getElementById("node-panel").style.pointerEvents = "auto";
+                document.getElementById("node-panel").style.opacity = "1";
+                canvas.read_only = false;
+                canvas.is_running_lock = false;
+                setToolbarLocked(false);
+                
+            } else if(data.status === "executing_node") {
+                canvas.executing_node_id = data.node_id;
+                canvas.setDirty(true, true);
+            } else if(data.status === "counter_update") {
+                // 计数节点实时显示当前次数
+                var cnode = graph.getNodeById(data.node_id);
+                if (cnode) {
+                    cnode.properties.current_count = data.value;
+                    if (data.max !== undefined) cnode.properties.max_count = data.max;
+                    cnode.setDirtyCanvas(true, true);
+                }
+            } else if(data.status === "coordinate_picked") {
+                var overlay = document.getElementById("coord-overlay");
+                if (overlay) document.body.removeChild(overlay);
+                
+                if (pendingCoordinateCallback) {
+                    if (data.x !== null && data.y !== null) {
+                        pendingCoordinateCallback(data.x, data.y);
+                    }
+                    pendingCoordinateCallback = null;
+                }
+            } else if(data.status === "region_picked") {
+                if (pendingRegionCallback) {
+                    pendingRegionCallback(data.region);
+                    pendingRegionCallback = null;
+                }
+            } else if(data.status === "colors_picked") {
+                if (pendingColorsCallback) {
+                    pendingColorsCallback(data.points);
+                    pendingColorsCallback = null;
+                }
+            } else if(data.status === "multicolor_result") {
+                var mcnode = graph.getNodeById(data.node_id);
+                if (mcnode) {
+                    mcnode.properties.last_result = data.found ? "命中" : "未命中";
+                    if (data.found && data.coords) mcnode.properties.last_coords = data.coords;
+                    else mcnode.properties.last_coords = null;
+                    if (typeof mcnode._updatePointUI === "function") mcnode._updatePointUI();
+                    mcnode.setDirtyCanvas(true, true);
+                }
+            } else if(data.status === "macro_recorded") {
+                if (data.action === "confirm" && activeMacroNodeToRecord) {
+                    // 追加到已有脚本末尾，避免二次录制把之前录的动作覆盖掉
+                    var _incoming = data.text || "";
+                    var _existing = activeMacroNodeToRecord.properties.script_text || "";
+                    if (_existing.trim() && _incoming.trim()) {
+                        activeMacroNodeToRecord.properties.script_text =
+                            _existing.replace(/\s+$/, "") + "\n" + _incoming;
+                    } else {
+                        activeMacroNodeToRecord.properties.script_text = _incoming || _existing;
+                    }
+                    if (typeof activeMacroNodeToRecord._syncTextArea === "function") {
+                        activeMacroNodeToRecord._syncTextArea();
+                    }
+                    if (typeof activeMacroNodeToRecord.updateRecordButtonState === "function") {
+                        activeMacroNodeToRecord.updateRecordButtonState();
+                    }
+                    canvas.setDirty(true, true);
+                    markProjectDirty();   // 录制完成写入脚本，视为一次修改
+                }
+                activeMacroNodeToRecord = null;
+            
+            } else if(data.status === "save_path_chosen") {
+                // 接收后端传回的系统保存路径，更新当前文件名并触发保存
+                currentFilePath = data.path;
+                currentFileName = data.path.split(/[/\\]/).pop();
+                saveGraphToFile(currentFilePath);
+            } else if(data.status === "saved") {
+                // 后端已成功写入，清除“未保存”标记并同步文件名
+                currentFilePath = data.path;
+                currentFileName = data.path.split(/[/\\]/).pop();
+                setProjectClean();
+                // 保存完成后短暂抑制“脏标记”，吞掉保存动作伴随的即时交互
+                // （如保存后立刻在画布上点击），避免 * 号刚消失又立刻闪现
+                suppressDirty = true;
+                setTimeout(function () { suppressDirty = false; }, 400);
+                if (data.recent) renderRecent(data.recent);
+                resolvePendingSave(true);
+            } else if(data.status === "save_failed" || data.status === "save_path_cancelled") {
+                // 保存失败或用户在系统对话框点了取消：未保存提示的“保存”按钮应中止后续操作
+                var saveMsg = data.status === "save_path_cancelled" ? "已取消保存，操作已中止" : ("保存失败：" + (data.msg || "未知错误"));
+                resolvePendingSave(false, saveMsg);
+            } else if(data.status === "request_unsaved_decision") {
+                // 后端（托盘退出 / 关闭窗口）请求确认；前端自行判断是否需要弹窗
+                handleBackendUnsavedRequest(data);
+            } else if(data.status === "loaded") {
+                // 打开工程 / 从最近项目打开
+                applyLoadedProject(data);
+            } else if(data.status === "recent_list") {
+                renderRecent(data.items || []);
+            } else if(data.status === "hotkey_start") {
+                if (!canvas.is_running_lock) document.getElementById("startBtn").click();
+            } else if(data.status === "hotkey_stop") {
+                document.getElementById("stopBtn").click();
+            } else if(data.status === "log") {
+                var logConsole = document.getElementById("log-console");
+                var msgDiv = document.createElement("div");
+                msgDiv.innerText = data.msg;
+                
+                if(data.msg.includes("❌") || data.msg.includes("警告")) msgDiv.style.color = "#ff5252";
+                else if(data.msg.includes("✅")) msgDiv.style.color = "#4CAF50";
+                else if(data.msg.includes("【后端】")) msgDiv.style.color = "#00bcd4";
+                
+                logConsole.appendChild(msgDiv);
+                // 限制日志行数，避免长期运行后 DOM 无限增长
+                while (logConsole.childElementCount > 500) {
+                    logConsole.removeChild(logConsole.firstChild);
+                }
+                logConsole.scrollTop = logConsole.scrollHeight;
+            }
+        }
+
+        setupWebSocket();
+
+        document.getElementById("startBtn").onclick = function() {
+            var graphData = graph.serialize();
+            ws.send(JSON.stringify({ action: "start", graph: graphData }));
+        };
+        document.getElementById("stopBtn").onclick = function() {
+            ws.send(JSON.stringify({ action: "stop" }));
+        };
+
+        // 【新增】前端定时向后端同步最新的热键配置，让 Python 底层实现真正的全局监听
+        var last_hotkeys = "";
+        setInterval(function() {
+            if(ws.readyState !== WebSocket.OPEN) return;
+            var nodes = graph._nodes;
+            var startNode = nodes.find(n => n.type === "AutoTask/Start");
+            var endNode = nodes.find(n => n.type === "AutoTask/End");
+            var start_hk = startNode ? startNode.properties.hotkey : "F8";
+            var stop_hk = endNode ? endNode.properties.hotkey : "ESC";
+            var current_hk = start_hk + "|" + stop_hk;
+            if(current_hk !== last_hotkeys) {
+                last_hotkeys = current_hk;
+                ws.send(JSON.stringify({action: "update_hotkeys", start: start_hk, stop: stop_hk}));
+            }
+        }, 1000);
+
+        var currentFileName = "newtask.otk";  // 未命名工程默认名
+        var currentFilePath = null; 
+        var isDirty = false;          // 是否存在未保存的修改
+        var suppressDirty = false;     // 加载/新建时临时抑制“脏标记”，避免误判
+
+        // —— 窗口标题栏：显示「工程名 + 未保存 *」——
+        var APP_TITLE = "OpenTask 自动化任务节点编辑器";
+        function setWindowTitle(text) {
+            document.title = text;
+            // 桌面版（pywebview）需要通过 Python 接口更新原生窗口标题栏
+            try {
+                if (window.pywebview && window.pywebview.api && window.pywebview.api.set_title) {
+                    var p = window.pywebview.api.set_title(text);
+                    if (p && typeof p.catch === "function") p.catch(function () {});
+                }
+            } catch (e) {}
+        }
+        function updateProjectName() {
+            setWindowTitle(APP_TITLE + " - " + currentFileName + (isDirty ? "*" : ""));
+        }
+        function markProjectDirty() {
+            if (suppressDirty) return;
+            if (!isDirty) { isDirty = true; updateProjectName(); }
+        }
+        function setProjectClean() {
+            isDirty = false;
+            updateProjectName();
+        }
+        // pywebview 桥梁就绪后再次刷新标题，确保初始标题正确
+        window.addEventListener("pywebviewready", function () { updateProjectName(); });
+        window.addEventListener("load", function () { updateProjectName(); });
+        setTimeout(function () { updateProjectName(); }, 1000);
+
+        // ==================== 未保存工程三按钮确认 ====================
+        // 决策值：save=已保存后继续；discard=不保存并继续；cancel=中止；clean=本来就没有改动
+        var unsavedResolve = null;
+        var unsavedSaving = false;
+
+        function unsavedText(reason) {
+            var map = {
+                new:    { title: "新建工程前保存", sub: "当前工程尚未保存", msg: "新建工程会清空当前画布，是否先保存修改？" },
+                open:   { title: "打开工程前保存", sub: "当前工程尚未保存", msg: "打开其他工程会替换当前画布，是否先保存修改？" },
+                recent: { title: "打开最近工程前保存", sub: "当前工程尚未保存", msg: "打开最近工程会替换当前画布，是否先保存修改？" },
+                close:  { title: "关闭窗口前保存", sub: "当前工程尚未保存", msg: "关闭窗口后软件会收起到系统托盘，是否先保存修改？" },
+                exit:   { title: "退出软件前保存", sub: "当前工程尚未保存", msg: "退出软件会结束当前任务并关闭程序，是否先保存修改？" }
+            };
+            return map[reason] || map.open;
+        }
+
+        function showUnsavedPrompt(reason) {
+            return new Promise(function (resolve) {
+                if (!isDirty) { resolve("clean"); return; }
+                // 同一时间只显示一个确认框（例如关闭窗口与托盘退出同时到达）
+                if (unsavedResolve) { resolve("cancel"); return; }
+                var text = unsavedText(reason);
+                document.getElementById("unsaved-title").textContent = text.title;
+                document.getElementById("unsaved-sub").textContent = text.sub;
+                document.getElementById("unsaved-msg").textContent = text.msg;
+                var buttons = [
+                    document.getElementById("unsaved-save-btn"),
+                    document.getElementById("unsaved-discard-btn"),
+                    document.getElementById("unsaved-cancel-btn")
+                ];
+                buttons.forEach(function (b) { b.disabled = false; });
+                unsavedSaving = false;
+                unsavedResolve = resolve;
+                document.getElementById("unsaved-modal").classList.remove("hidden");
+                setTimeout(function () { buttons[0].focus(); }, 0);
+            });
+        }
+
+        function finishUnsavedPrompt(decision) {
+            if (!unsavedResolve) return;
+            var resolver = unsavedResolve;
+            unsavedResolve = null;
+            unsavedSaving = false;
+            document.getElementById("unsaved-modal").classList.add("hidden");
+            resolver(decision);
+        }
+
+        function confirmUnsaved(reason) {
+            return isDirty ? showUnsavedPrompt(reason) : Promise.resolve("clean");
+        }
+
+        // 保存并等待后端真正写完；用户取消另存为路径或写入失败都会 resolve(false)
+        function saveGraphAndWait() {
+            return new Promise(function (resolve) {
+                if (!ws || ws.readyState !== WebSocket.OPEN) {
+                    toast("无法保存：本地引擎未连接", true);
+                    resolve(false);
+                    return;
+                }
+                if (pendingSaveResolver) { resolve(false); return; }
+                pendingSaveResolver = resolve;
+                pendingSaveTimer = setTimeout(function () {
+                    resolvePendingSave(false, "保存超时，操作已中止");
+                }, 60000);
+                if (currentFilePath) saveGraphToFile(currentFilePath);
+                else saveAsGraph();
+            });
+        }
+
+        document.getElementById("unsaved-save-btn").onclick = function () {
+            if (unsavedSaving) return;
+            unsavedSaving = true;
+            var buttons = [
+                document.getElementById("unsaved-save-btn"),
+                document.getElementById("unsaved-discard-btn"),
+                document.getElementById("unsaved-cancel-btn")
+            ];
+            buttons.forEach(function (b) { b.disabled = true; });
+            saveGraphAndWait().then(function (ok) {
+                finishUnsavedPrompt(ok ? "save" : "cancel");
+            });
+        };
+        document.getElementById("unsaved-discard-btn").onclick = function () { finishUnsavedPrompt("discard"); };
+        document.getElementById("unsaved-cancel-btn").onclick = function () { finishUnsavedPrompt("cancel"); };
+        document.addEventListener("keydown", function (e) {
+            if (document.getElementById("unsaved-modal").classList.contains("hidden")) return;
+            if (e.key === "Escape") { e.preventDefault(); finishUnsavedPrompt("cancel"); }
+        }, true);
+
+        function sendBackendUnsavedDecision(requestId, decision) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+            ws.send(JSON.stringify({
+                action: "unsaved_decision",
+                requestId: requestId,
+                decision: decision
+            }));
+            return true;
+        }
+
+        function handleBackendUnsavedRequest(data) {
+            var requestId = data.requestId;
+            var reason = data.reason || "exit";
+            if (!requestId) return;
+            if (!isDirty) { sendBackendUnsavedDecision(requestId, "clean"); return; }
+            showUnsavedPrompt(reason).then(function (decision) {
+                if (!sendBackendUnsavedDecision(requestId, decision)) {
+                    toast("确认结果发送失败，操作已中止", true);
+                }
+            });
+        }
+
+        function saveGraphToFile(filePath) {
+            if (!filePath) { saveAsGraph(); return; }
+            var data = JSON.stringify(graph.serialize());
+            ws.send(JSON.stringify({
+                action: "save_graph",
+                filePath: filePath,
+                data: data
+            }));
+        }
+        // 保存：已有工程文件则直接覆盖；否则等同于“另存为”
+        function saveGraph() {
+            if (currentFilePath) saveGraphToFile(currentFilePath);
+            else saveAsGraph();
+        }
+        // 另存为：重新选择位置与文件名
+        function saveAsGraph() {
+            ws.send(JSON.stringify({
+                action: "choose_save_path",
+                defaultName: currentFileName
+            }));
+        }
+        document.getElementById("saveBtn").onclick = function() { saveGraph(); };
+        document.getElementById("saveAsBtn").onclick = function() { saveAsGraph(); };
+        document.getElementById("loadBtn").onclick = function() {
+            // 切换工程前先确认未保存修改，取消则完全不弹原生“打开”对话框
+            confirmUnsaved("open").then(function (decision) {
+                if (decision === "cancel") return;
+                // 交给后端弹出原生“打开”对话框：浏览器拿不到绝对路径，
+                // 由后端选择后即可拿到路径，保存时才能直接覆盖原文件。
+                ws.send(JSON.stringify({ action: "choose_load_path" }));
+            });
+        };
+
+        // 应用后端返回的工程数据（打开文件 / 最近项目）
+        function applyLoadedProject(data) {
+            try {
+                var gdata = JSON.parse(data.data);
+                suppressDirty = true;            // 加载期间不标记为脏
+                graph.configure(gdata);
+                // LiteGraph 的 configure 只还原 node.properties，不会自动把控件显示值
+                // 同步成已保存的属性（property 选项在 configure 里不会被应用），
+                // 因此这里强制把“绑定到 property 的控件”显示值刷成已保存的属性值，
+                // 否则加载后控件仍显示默认值（数据其实已正确，只是界面没回填）。
+                if (graph._nodes) {
+                    for (var ni = 0; ni < graph._nodes.length; ni++) {
+                        var nd = graph._nodes[ni];
+                        if (!nd || !nd.widgets) continue;
+                        for (var wi = 0; wi < nd.widgets.length; wi++) {
+                            var wg = nd.widgets[wi];
+                            if (wg && wg.property && nd.properties && nd.properties[wg.property] !== undefined) {
+                                wg.value = nd.properties[wg.property];
+                            }
+                        }
+                    }
+                }
+                suppressDirty = false;
+                currentFilePath = data.path;     // 关键：拿到绝对路径，保存可直接覆盖
+                currentFileName = data.path.split(/[/\\]/).pop();
+                setProjectClean();               // 加载后等同已保存状态
+                if (data.recent) renderRecent(data.recent);
+                canvas.setDirty(true, true);
+                toast("已打开：" + currentFileName);
+            } catch (err) {
+                alert("加载失败：文件格式不正确或已损坏！");
+            }
+        }
+
+        function createNewGraph() {
+            suppressDirty = true;       // 新建期间不标记为脏
+            graph.clear(); 
+            currentFileName = "newtask.otk";
+            currentFilePath = null;   // 【修复】新建后必须清掉旧路径，否则会覆盖上一个工程
+            var startNode = LiteGraph.createNode("AutoTask/Start");
+            startNode.pos = [200, 300];
+            graph.add(startNode);
+            var endNode = LiteGraph.createNode("AutoTask/End");
+            endNode.pos = [600, 300];
+            graph.add(endNode);
+            startNode.connect(0, endNode, 0);
+            suppressDirty = false;
+            setProjectClean();         // 新建后等同已保存状态
+            setTimeout(fitView, 120); 
+            canvas.setDirty(true, true);
+        }
+
+        document.getElementById("newBtn").onclick = function() {
+            confirmUnsaved("new").then(function (decision) {
+                if (decision === "cancel") return;
+                createNewGraph();
+            });
+        };
+
+        // —— 最近项目下拉菜单 ——
+        var _recentItems = [];
+        function renderRecent(items) {
+            if (items) _recentItems = items;
+            var menu = document.getElementById("recentMenu");
+            if (!menu) return;
+            menu.innerHTML = "";
+            if (!_recentItems.length) {
+                var empty = document.createElement("div");
+                empty.className = "recent-empty";
+                empty.textContent = "暂无最近项目";
+                menu.appendChild(empty);
+                return;
+            }
+            _recentItems.forEach(function (p) {
+                var name = p.split(/[/\\]/).pop();
+                var item = document.createElement("div");
+                item.className = "recent-item";
+                item.title = p;
+                var nameEl = document.createElement("span");
+                nameEl.className = "recent-name";
+                nameEl.textContent = name;
+                var pathEl = document.createElement("span");
+                pathEl.className = "recent-path";
+                pathEl.textContent = p;
+                item.appendChild(nameEl);
+                item.appendChild(pathEl);
+                item.onclick = function (e) {
+                    e.stopPropagation();
+                    closeRecentMenu();
+                    confirmUnsaved("recent").then(function (decision) {
+                        if (decision === "cancel") return;
+                        ws.send(JSON.stringify({ action: "load_recent", filePath: p }));
+                    });
+                };
+                menu.appendChild(item);
+            });
+        }
+        function openRecentMenu() {
+            renderRecent();
+            var menu = document.getElementById("recentMenu");
+            if (menu) menu.classList.add("show");
+        }
+        function closeRecentMenu() {
+            var menu = document.getElementById("recentMenu");
+            if (menu) menu.classList.remove("show");
+        }
+        document.getElementById("recentBtn").onclick = function (e) {
+            e.stopPropagation();
+            var menu = document.getElementById("recentMenu");
+            if (menu && menu.classList.contains("show")) closeRecentMenu();
+            else openRecentMenu();
+        };
+        // 点击下拉菜单以外的区域则关闭（用捕获阶段，确保点在画布/节点上也生效：
+        // 画布的 mousedown 监听在捕获阶段并会 stopPropagation，冒泡阶段的分发听不到）
+        document.addEventListener("mousedown", function (e) {
+            var menu = document.getElementById("recentMenu");
+            var btn = document.getElementById("recentBtn");
+            if (!menu || !menu.classList.contains("show")) return;
+            if (menu.contains(e.target)) return;
+            if (btn && (btn === e.target || btn.contains(e.target))) return;
+            closeRecentMenu();
+        }, true);
+
+        // —— 修改追踪：节点区任何操作都算改动（选中/拖动/连删等） ——
+        graph.on_change = markProjectDirty;        // 增删节点、连线变化
+        // 在画布上按下鼠标（点选、框选、拖动节点起点、右键）都算一次改动
+        canvas.canvas.addEventListener("mousedown", function () { markProjectDirty(); }, true);
+        // 拖动节点：保留原有的“拖到连线上自动插入”逻辑，再叠加脏标记
+        var _origOnNodeMoved = canvas.onNodeMoved;
+        canvas.onNodeMoved = function (node) {
+            if (typeof _origOnNodeMoved === "function") _origOnNodeMoved.call(this, node);
+            markProjectDirty();
+        };
+        // 选中节点（含 Ctrl+A 全选）也算一次改动
+        var _origOnNodeSelected = canvas.onNodeSelected;
+        canvas.onNodeSelected = function () {
+            if (typeof _origOnNodeSelected === "function") _origOnNodeSelected.apply(this, arguments);
+            markProjectDirty();
+        };
+        (function () {
+            // 包裹 addWidget，捕获所有控件（下拉/数字/文本等）的编辑
+            var _aw = LiteGraph.LGraphNode.prototype.addWidget;
+            if (_aw) {
+                LiteGraph.LGraphNode.prototype.addWidget = function () {
+                    var w = _aw.apply(this, arguments);
+                    if (w) {
+                        var cb = w.callback;
+                        w.callback = function () {
+                            var r = cb ? cb.apply(this, arguments) : undefined;
+                            markProjectDirty();
+                            return r;
+                        };
+                    }
+                    return w;
+                };
+            }
+        })();
+        updateProjectName();
+
+        // ==================== 顶栏 / 侧栏 / 日志面板 交互 ====================
+        document.getElementById("fitViewBtn").onclick = function () { fitView(); };
+        document.getElementById("helpBtn").onclick = function () { toggleHelp(); };
+        document.getElementById("helpCloseBtn").onclick = function () { toggleHelp(); };
+        document.getElementById("help-modal").onclick = function (e) {
+            if (e.target === this) toggleHelp();
+        };
+
+        document.getElementById("clearLogBtn").onclick = function (e) {
+            e.stopPropagation();
+            document.getElementById("log-console").innerHTML = "";
+        };
+        document.getElementById("logHead").onclick = function () {
+            document.getElementById("log-panel").classList.toggle("collapsed");
+        };
+
+        // 节点库搜索过滤（支持中文名与节点类型）
+        document.getElementById("node-search").addEventListener("input", function () {
+            var kw = this.value.trim().toLowerCase();
+            var groups = document.querySelectorAll(".node-group");
+            for (var g = 0; g < groups.length; g++) {
+                var items = groups[g].querySelectorAll(".node-btn");
+                var visible = 0;
+                for (var i = 0; i < items.length; i++) {
+                    var txt = items[i].innerText.toLowerCase();
+                    var type = (items[i].getAttribute("data-type") || "").toLowerCase();
+                    var show = !kw || txt.indexOf(kw) !== -1 || type.indexOf(kw) !== -1;
+                    if (show) visible++;
+                    items[i].classList.toggle("filtered", !show);
+                }
+                groups[g].style.display = visible ? "" : "none";
+            }
+        });
+
+        createNewGraph();
+        graph.start();
+        
+    </script>
+</body>
+</html>
