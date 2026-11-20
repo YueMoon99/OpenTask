@@ -23,9 +23,7 @@
   用可视化连线编排「截图识别 → 判断 → 鼠标键盘操作 → 循环控制」，无需编写代码。
 </p>
 
-<p align="center">
-  <a href="#top">回到顶部</a> · <a href="#english">English</a>
-</p>
+<img width="1280" height="800" alt="OpenTask_中文界面_压缩" src="https://github.com/user-attachments/assets/738dce8a-a490-4d66-a524-12e9ac04aa37" />
 
 ## 目录
 
@@ -227,9 +225,7 @@ flowchart LR
   Build workflows visually by connecting nodes — screenshot recognition → decisions → mouse & keyboard actions → loops — with no coding required.
 </p>
 
-<p align="center">
-  <a href="#chinese">中文</a> · <a href="#top">Back to top</a>
-</p>
+<img width="1280" height="800" alt="OpenTask_英文界面_压缩" src="https://github.com/user-attachments/assets/3b7b62f4-f5c6-4a50-9a43-3a9f18356a55" />
 
 ## Table of Contents
 
