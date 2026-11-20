@@ -25,6 +25,14 @@
 
 <img width="1280" height="800" alt="OpenTask_中文界面_压缩" src="https://github.com/user-attachments/assets/738dce8a-a490-4d66-a524-12e9ac04aa37" />
 
+## 💬 联系作者<br>
+由 舟午YueMoon 开发。<br>
+如果你有任何建议、遇到了 BUG，或者单纯想催更，欢迎在B站/Youtube相关视频的评论区告诉我！<br>
+博客：http://yuemoon.vip/<br>
+GitHub：@YueMoon99<br>
+B站：UID223633562<br>
+YouTube：@YueMoon99<br>
+
 ## 目录
 
 - [功能特性](#cn-features)
@@ -226,6 +234,14 @@ flowchart LR
 </p>
 
 <img width="1280" height="800" alt="OpenTask_英文界面_压缩" src="https://github.com/user-attachments/assets/3b7b62f4-f5c6-4a50-9a43-3a9f18356a55" />
+
+
+
+## 💬 Contact<br>
+Blog：http://yuemoon.vip/<br>
+GitHub：@YueMoon99<br>
+Blibili：UID223633562<br>
+YouTube：@YueMoon99<br>
 
 ## Table of Contents
 
