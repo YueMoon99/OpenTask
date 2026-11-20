@@ -1,9 +1,6 @@
-# OpenTask
+<a id="top"></a>
 
-<p align="center">
-  <b>基于节点图的 Windows 桌面自动化工具</b><br>
-  用可视化连线编排「截图识别 → 判断 → 鼠标键盘操作 → 循环控制」，无需编写代码。
-</p>
+# OpenTask
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.8%2B-blue" alt="Python">
@@ -11,22 +8,41 @@
   <img src="https://img.shields.io/badge/Version-0.1.0-green" alt="Version">
 </p>
 
+<p align="center">
+  <a href="#chinese">中文</a> · <a href="#english">English</a>
+</p>
+
 ---
+
+<a id="chinese"></a>
+
+# OpenTask 中文文档
+
+<p align="center">
+  <b>基于节点图的 Windows 桌面自动化工具</b><br>
+  用可视化连线编排「截图识别 → 判断 → 鼠标键盘操作 → 循环控制」，无需编写代码。
+</p>
+
+<p align="center">
+  <a href="#top">回到顶部</a> · <a href="#english">English</a>
+</p>
 
 ## 目录
 
-- [功能特性](#-功能特性)
-- [内置节点](#-内置节点)
-- [快速开始](#-快速开始)
-- [项目结构](#-项目结构)
-- [工作原理](#-工作原理)
-- [工程文件](#-工程文件)
-- [环境变量](#-环境变量)
-- [常见问题](#-常见问题)
-- [免责声明](#-免责声明)
-- [许可证](#-许可证)
+- [功能特性](#cn-features)
+- [内置节点](#cn-nodes)
+- [快速开始](#cn-quickstart)
+- [项目结构](#cn-structure)
+- [工作原理](#cn-architecture)
+- [工程文件](#cn-project)
+- [环境变量](#cn-env)
+- [常见问题](#cn-faq)
+- [免责声明](#cn-disclaimer)
+- [许可证](#cn-license)
 
 ---
+
+<a id="cn-features"></a>
 
 ## ✨ 功能特性
 
@@ -44,6 +60,8 @@
 
 ---
 
+<a id="cn-nodes"></a>
+
 ## 🧩 内置节点
 
 | 分类 | 节点 | 说明 |
@@ -53,7 +71,7 @@
 | 画面识别 | `图像` | 加载截图模板（支持从剪贴板/文件选取） |
 | 画面识别 | `图像识别` | 模板匹配，输出「识别到 / 未识别 / 位置」，支持限定识别范围与置信度 |
 | 画面识别 | `多点找色` | 以主锚点颜色 + 多个偏移点颜色校验，输出「找到 / 未找到 / 坐标」 |
-| 画面识别 | `智能置中` | 依据目标图像 deviation 自动移动准星，支持视角/光标模式与灵敏度自校准 |
+| 画面识别 | `智能置中` | 依据目标图像偏差自动移动准星，支持视角/光标模式与灵敏度自校准 |
 | 数据 | `坐标` / `向量计算` / `当前指针位置` | 生成与变换坐标、获取鼠标当前位置 |
 | 鼠标 | `鼠标按下` / `鼠标抬起` / `鼠标移动` / `鼠标点击` | 支持前后延时、持续时间、按键选择 |
 | 键盘 | `按键` / `键盘按下` / `键盘抬起` | 支持组合键与连续按键 |
@@ -62,6 +80,8 @@
 | 辅助 | `计数` | 按次数分支，节点上实时显示当前计数 |
 
 ---
+
+<a id="cn-quickstart"></a>
 
 ## 🚀 快速开始
 
@@ -95,6 +115,8 @@ build_exe.bat
 
 ---
 
+<a id="cn-structure"></a>
+
 ## 📁 项目结构
 
 ```text
@@ -112,6 +134,8 @@ OpenTask Code/
 ```
 
 ---
+
+<a id="cn-architecture"></a>
 
 ## 🏗️ 工作原理
 
@@ -132,6 +156,8 @@ flowchart LR
 
 ---
 
+<a id="cn-project"></a>
+
 ## 💾 工程文件
 
 - 工程以 `.otk` 文件保存（本质是包含 `nodes` / `links` 的 JSON）。
@@ -140,6 +166,8 @@ flowchart LR
 - 最近项目列表保存在当前用户目录；若以提权账户运行，会写入该提权账户的用户目录。
 
 ---
+
+<a id="cn-env"></a>
 
 ## ⚙️ 环境变量
 
@@ -151,6 +179,8 @@ flowchart LR
 程序默认占用 `127.0.0.1:8000`，若被占用会依次尝试 8001–8019。
 
 ---
+
+<a id="cn-faq"></a>
 
 ## ❓ 常见问题
 
@@ -171,12 +201,226 @@ flowchart LR
 
 ---
 
+<a id="cn-disclaimer"></a>
+
 ## ⚠️ 免责声明
 
 本项目仅供学习与技术交流，请遵守所在平台/游戏的用户协议与当地法律法规。使用者因自动化操作产生的任何账号风险或损失，由使用者自行承担。
 
 ---
 
+<a id="cn-license"></a>
+
 ## 📄 许可证
 
 上传 GitHub 前请根据实际情况补充 LICENSE 文件（如 MIT / GPL-3.0）。在此之前，本项目代码版权归作者所有。
+
+---
+---
+
+<a id="english"></a>
+
+# OpenTask — English Documentation
+
+<p align="center">
+  <b>A node-graph based Windows desktop automation tool</b><br>
+  Build workflows visually by connecting nodes — screenshot recognition → decisions → mouse & keyboard actions → loops — with no coding required.
+</p>
+
+<p align="center">
+  <a href="#chinese">中文</a> · <a href="#top">Back to top</a>
+</p>
+
+## Table of Contents
+
+- [Features](#en-features)
+- [Built-in Nodes](#en-nodes)
+- [Quick Start](#en-quickstart)
+- [Project Structure](#en-structure)
+- [How It Works](#en-architecture)
+- [Project Files](#en-project)
+- [Environment Variables](#en-env)
+- [FAQ](#en-faq)
+- [Disclaimer](#en-disclaimer)
+- [License](#en-license)
+
+---
+
+<a id="en-features"></a>
+
+## ✨ Features
+
+- **Visual node orchestration**: a LiteGraph-based canvas editor — drag nodes and connect them to define a task workflow.
+- **Multiple screen recognition methods**: template matching (normalized correlation coefficient, resistant to brightness changes), multi-point color matching, and smart centering (target tracking).
+- **Hardware-level input simulation**: mouse click/move, key down/up and key combinations, compatible with some games running as administrator.
+- **Macro recording**: record real mouse and keyboard operations and replay them as an action macro node.
+- **Loops and counting**: count branches, anchor jumps and returns for repetitive tasks.
+- **Hotkey control**: bind global hotkeys to the Start and End nodes to start or stop at any time.
+- **Background tray operation**: closing the window sends the app to the system tray; the right-click menu lets you quit, enable auto-start, or open the program directory.
+- **Unsaved changes reminder**: when closing the app or creating / opening / switching projects with unsaved changes, a three-button prompt appears — Save / Don't Save / Cancel.
+- **Ready to use**: a portable packaged build is provided, or you can run directly from source.
+
+> Windows only.
+
+---
+
+<a id="en-nodes"></a>
+
+## 🧩 Built-in Nodes
+
+| Category | Node | Description |
+|---|---|---|
+| Flow control | `Start` / `End` | Define the workflow entry and exit; can bind start/stop hotkeys |
+| Flow control | `Return to (anchor)` / `Return (jump)` | Implement loops and jumps |
+| Screen recognition | `Image` | Load a screenshot template (from clipboard or file) |
+| Screen recognition | `Image Recognition` | Template matching; outputs "Found / Not Found / Position", with region limit and confidence |
+| Screen recognition | `Multi-point Color` | Verify the anchor color plus multiple offset-point colors; outputs "Found / Not Found / Coordinates" |
+| Screen recognition | `Smart Centering` | Automatically move the crosshair based on target image deviation; supports view/cursor modes and sensitivity auto-calibration |
+| Data | `Coordinate` / `Vector Math` / `Current Pointer Position` | Generate and transform coordinates, and get the current mouse position |
+| Mouse | `Mouse Down` / `Mouse Up` / `Mouse Move` / `Mouse Click` | Support pre/post delays, duration and button selection |
+| Keyboard | `Key Press` / `Key Down` / `Key Up` | Support key combinations and consecutive keys |
+| Utility | `Action Macro` | Record and replay a sequence of real operations |
+| Utility | `Delay` | Fixed or random delay |
+| Utility | `Counter` | Branch by count; shows the current count on the node in real time |
+
+---
+
+<a id="en-quickstart"></a>
+
+## 🚀 Quick Start
+
+### Option 1: Packaged build (recommended, no Python needed)
+
+1. Download the release package, extract it, and open the `OpenTask 0.1.0` folder.
+2. Double-click `OpenTask.exe`. The first launch requests administrator privileges — this allows the app to record input from windows running as administrator; if you don't need it, you can decline and run with normal privileges.
+3. Closing the window sends the app to the system tray. Only **right-click the tray icon → Quit** truly closes it.
+
+> Requirements: Windows 10/11 with **Edge WebView2 Runtime** installed (usually preinstalled on newer Windows).
+
+### Option 2: Run from source
+
+```bash
+# Install dependencies (Python 3.8+)
+pip install -r requirements.txt
+
+# Start
+python main.py
+```
+
+Windows users can also double-click `run.bat`: the script detects Python, installs dependencies on first run, and starts the app.
+
+### Build it yourself
+
+```bash
+build_exe.bat
+```
+
+The script installs PyInstaller automatically and produces a `dist\OpenTask` folder in onedir mode; copy its contents to the release folder.
+
+---
+
+<a id="en-structure"></a>
+
+## 📁 Project Structure
+
+```text
+OpenTask Code/
+├── main.py                 # Backend: FastAPI server, WebSocket, task execution engine, tray & system interaction
+├── requirements.txt        # Python dependencies
+├── run.bat                 # One-click source launcher
+├── build_exe.bat           # PyInstaller build script
+├── pyrightconfig.json      # Type-checking configuration
+├── probe_*.py              # Development diagnostic scripts (capture / compare / input / window probing)
+└── static/
+    ├── index.html          # Frontend: node definitions, canvas interaction, WebSocket client
+    ├── litegraph.js/css    # Node editor library (local, no external dependency)
+    └── icon.ico/png        # Program icon
+```
+
+---
+
+<a id="en-architecture"></a>
+
+## 🏗️ How It Works
+
+```mermaid
+flowchart LR
+    A[pywebview desktop window] --> B[Browser frontend<br/>index.html + LiteGraph]
+    B -->|WebSocket commands| C[FastAPI local server<br/>127.0.0.1:8000]
+    C --> D[Task execution engine<br/>main.py]
+    D -->|Screenshot via mss| E[Screen<br/>OpenCV / NumPy recognition]
+    D -->|Input simulation<br/>pyautogui / pydirectinput| F[Mouse & Keyboard]
+    D -->|Status push| B
+    C --> G[System tray pystray<br/>Hotkeys pynput]
+```
+
+- The **frontend** handles orchestration and display; the node graph is saved as JSON.
+- The **backend** starts a local HTTP/WebSocket service. The frontend sends `start` / `stop` / save / load commands over WebSocket, and the backend pushes execution status, logs, counts and recognition results in real time.
+- Recognition uses `mss` for screenshots plus OpenCV template matching / color masks; input simulation uses `pyautogui` and `pydirectinput`; hotkeys and input recording use `pynput`.
+
+---
+
+<a id="en-project"></a>
+
+## 💾 Project Files
+
+- Projects are saved as `.otk` files (essentially JSON containing `nodes` / `links`).
+- Supports Save / Save As / Load / Recent Projects.
+- If you close the app or switch projects with unsaved changes, a three-button prompt appears: **Save** (continue after a successful write), **Don't Save** (discard changes and continue), **Cancel** (abort the current action).
+- The recent-projects list is stored in the current user's directory; when running elevated, it is written to the elevated account's directory.
+
+---
+
+<a id="en-env"></a>
+
+## ⚙️ Environment Variables
+
+| Variable | Purpose |
+|---|---|
+| `OPEN_TASK_NO_ELEVATE=1` | Skip UAC elevation and start with normal privileges (cannot record input from elevated windows) |
+| `OPEN_TASK_NO_SINGLE_INSTANCE=1` | Allow multiple instances (single-instance protection is on by default; a duplicate launch activates the existing window) |
+
+The app uses `127.0.0.1:8000` by default and tries 8001–8019 sequentially if it is occupied.
+
+---
+
+<a id="en-faq"></a>
+
+## ❓ FAQ
+
+**Q: No window appears after double-clicking the exe?**
+First confirm that WebView2 Runtime is installed. If it is a permission issue, set `OPEN_TASK_NO_ELEVATE=1` and retry to distinguish an elevation failure from other problems.
+
+**Q: Can't record mouse or keyboard input from a game?**
+The game may be running as administrator. Start OpenTask as administrator (allow UAC elevation) before recording.
+
+**Q: The process is still running after I close the window?**
+By design — the app moves to the background tray when the window is closed. Right-click the tray icon and choose "Quit" to clean up both the process and the tray icon.
+
+**Q: A solid-color template isn't recognized?**
+The normalized correlation coefficient algorithm requires some texture variation; a solid-color template has zero variance and fails. Use a screenshot region with visible detail.
+
+**Q: Recognition thresholds from older projects no longer work?**
+The recognition algorithm was upgraded from normalized cross-correlation to the correlation coefficient. High confidence thresholds calibrated for the old algorithm may need to be lowered.
+
+---
+
+<a id="en-disclaimer"></a>
+
+## ⚠️ Disclaimer
+
+This project is for learning and technical exchange only. Please comply with the terms of service of the platforms or games involved and with local laws and regulations. Any account risk or loss arising from automated operations is the sole responsibility of the user.
+
+---
+
+<a id="en-license"></a>
+
+## 📄 License
+
+Please add a LICENSE file (e.g. MIT / GPL-3.0) before publishing to GitHub. Until then, all code copyright belongs to the author.
+
+---
+
+<p align="center">
+  <a href="#chinese">中文</a> · <a href="#english">English</a> · <a href="#top">Back to top</a>
+</p>
