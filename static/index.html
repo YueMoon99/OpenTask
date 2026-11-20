@@ -309,6 +309,7 @@
 
         <div class="spacer"></div>
 
+        <button id="langBtn" class="btn" data-i18n-skip title="Switch to English">🌐 <span id="langBtnText">Switch to English</span></button>
         <button id="helpBtn" class="btn btn-icon" title="快捷键与操作说明">?</button>
         <div id="status" class="status-pill ready"><span class="dot"></span><span id="status-text">🟡 连接中...</span></div>
     </header>
@@ -429,6 +430,329 @@
     <script>
         var graph = new LGraph();
         var canvas = new LGraphCanvas("#mycanvas", graph);
+        // ==== I18N_ENGINE_BEGIN ====
+        // ============ 中英文界面切换引擎 ============
+        var I18N_DICT = {
+"▶ 开始": "▶ Start",
+"⏹ 结束": "⏹ End",
+"🖼️ 图片加载": "🖼️ Load Image",
+"🔍 图像识别": "🔍 Image Match",
+"🌈 多点找色": "🌈 Multi-Color",
+"🎯 智能置中": "🎯 Smart Center",
+"🔴 动作宏节点": "🔴 Action Macro",
+"🖱️ 鼠标点击": "🖱️ Mouse Click",
+"🔽 鼠标按下": "🔽 Mouse Down",
+"🔼 鼠标抬起": "🔼 Mouse Up",
+"↗️ 鼠标移动": "↗️ Mouse Move",
+"⌨️ 键盘点击": "⌨️ Key Press",
+"⬇️ 键盘按下": "⬇️ Key Down",
+"⬆️ 键盘抬起": "⬆️ Key Up",
+"📍 坐标提取": "📍 Coordinate",
+"🧮 向量计算": "🧮 Vector Math",
+"🖱️ 当前指针": "🖱️ Current Mouse",
+"↩️ 返回至 (锚点)": "↩️ Return To (Anchor)",
+"↩️ 返回至(锚点)": "↩️ Return To (Anchor)",
+"↪️ 返回 (跳跃)": "↪️ Return (Jump)",
+"↪️ 返回(跳跃)": "↪️ Return (Jump)",
+"🔢 计数器": "🔢 Counter",
+"⏳ 延迟": "⏳ Delay",
+"🔢 计数": "🔢 Counter",
+"🔴 录制": "🔴 Record",
+"🔄 重录": "🔄 Re-record",
+"🧹 清除": "🧹 Clear",
+"🖱️ 当前指针位置": "🖱️ Current Mouse",
+"🖼️ 图片": "🖼️ Image",
+"执行输入": "Input",
+"触发执行": "Trigger",
+"向下执行": "Next",
+"接收循环": "Loop In",
+"触发循环": "Loop Trigger",
+"完成后": "Done",
+"数字输入": "Number",
+"计数之内": "Within Count",
+"超过计数": "Over Count",
+"图片数据": "Image",
+"图片输入": "Image",
+"目标图像": "Target Image",
+"坐标向量": "Vector",
+"✅ 识别到": "✅ Found",
+"❌ 未识别到": "❌ Not Found",
+"📍 位置": "📍 Position",
+"✅ 找到": "✅ Found",
+"❌ 未找到": "❌ Not Found",
+"📍 坐标": "📍 Position",
+"到位完成": "Centered",
+"未到位": "Not Centered",
+"起点": "Start",
+"终点": "End",
+"向量A": "Vector A",
+"向量B": "Vector B",
+"和向量": "Sum",
+"差向量": "Diff",
+"模长": "Length",
+"计算类型": "Operation",
+"结果": "Result",
+"执行流": "Flow",
+"位置": "Position",
+"启动热键": "Start Hotkey",
+"停止热键": "Stop Hotkey",
+"⌨️ 录制热键": "⌨️ Record Hotkey",
+"常用按键": "Common Keys",
+"浏览系统图片": "Browse Image...",
+"匹配相似度": "Confidence",
+"限定识别范围": "Limit Region",
+"🎯 重新框选范围": "🎯 Re-select Region",
+"🧹 清除范围": "🧹 Clear Region",
+"未设置（整屏）": "Not set (full screen)",
+"颜色容差": "Color Tolerance",
+"🎨 拾取特征点": "🎨 Pick Colors",
+"限定查找范围": "Limit Region",
+"特征点": "Points",
+"点 · 容差±": "pts · tol±",
+"主": "Main",
+"共": "Total ",
+"未拾取（点“拾取特征点”）": "Not picked (click Pick Colors)",
+"未拾取": "Not picked",
+"未命中": "Miss",
+"命中": "Hit",
+"目标X": "Target X",
+"目标Y": "Target Y",
+"🎯 获取屏幕坐标": "🎯 Pick Screen Pos",
+"控制模式": "Control Mode",
+"视角反向(FPS)": "View Inverse (FPS)",
+"光标同向": "Cursor Direct",
+"灵敏度补偿": "Sensitivity",
+"步进比例": "Step Ratio",
+"到位容差": "Tolerance",
+"识别阈值": "Confidence",
+"最大次数": "Max Count",
+"稳定等待ms": "Settle (ms)",
+"指定按键": "Key",
+"⌨️ 录制按键": "⌨️ Record Key",
+"鼠标按键": "Mouse Button",
+"点击前延迟(ms)": "Pre-click (ms)",
+"点击时长(ms)": "Hold (ms)",
+"点击后延迟(ms)": "Post-click (ms)",
+"按键前延迟(ms)": "Pre-key (ms)",
+"按键时长(ms)": "Hold (ms)",
+"按键后延迟(ms)": "Post-key (ms)",
+"延时(ms)": "Delay (ms)",
+"每次随机": "Random",
+"最小(ms)": "Min (ms)",
+"最大(ms)": "Max (ms)",
+"时长(ms)": "Duration (ms)",
+"延迟(ms)": "Delay (ms)",
+"抖动值": "Jitter",
+"范围": "Region",
+"节点自动化": "Node Automation",
+"运行工作流（热键见开始节点）": "Run workflow (see Start hotkey)",
+"▶ 开始执行": "▶ Run",
+"⏹ 停止": "⏹ Stop",
+"停止运行": "Stop",
+"新建动作宏节点并开始录制": "New macro node & start recording",
+"🔴 录制宏": "🔴 Record Macro",
+"缩放至适应全部节点": "Fit all nodes in view",
+"⛶ 适应视图": "⛶ Fit View",
+"最近使用的工程": "Recent projects",
+"🕘 最近": "🕘 Recent",
+"📄 新建": "📄 New",
+"📂 加载": "📂 Open",
+"💾 保存": "💾 Save",
+"📝 另存为": "📝 Save As",
+"快捷键与操作说明": "Shortcuts & help",
+"节点库": "Nodes",
+"搜索节点 / 拖到画布": "Search nodes / drag to canvas",
+"流程": "Flow",
+"图像素材": "Images",
+"识别定位": "Detection",
+"输入模拟": "Input",
+"数据": "Data",
+"流程控制": "Control",
+"拖拽节点到画布添加": "Drag a node onto the canvas",
+"把节点拖到": "Drop a node onto",
+"连线上": "a link",
+"可自动接入": "to auto-connect",
+"左键拖空白": "Left-drag empty space",
+"框选": "box select",
+"，中键/空格": ", middle/space",
+"平移": "pan",
+"运行日志": "Run Log",
+"清空": "Clear",
+"🟡 连接中...": "🟡 Connecting...",
+"🟡 已就绪 (Ready)": "🟡 Ready",
+"🔴 已断开，2 秒后自动重连...": "🔴 Disconnected, retry in 2s...",
+"🟢 正在运行 (Running...)": "🟢 Running...",
+"未运行": "Idle",
+"操作与快捷键": "Controls & Shortcuts",
+"模仿 Blender 节点编辑器的连线手感": "Blender-style node editing",
+"拖到连线上": "Drop on link",
+"连线高亮 → 松手自动接入两个节点之间": "Link highlights → release to insert between nodes",
+"拖出连线到空白处": "Drag to empty space",
+"弹出搜索框，创建节点并自动连好": "Search box opens; create & auto-connect",
+"双击空白处": "Double-click empty space",
+"打开节点搜索框": "Open node search",
+"Alt + 点击连线": "Alt + Click link",
+"快速删除这条连线": "Quick delete link",
+"Ctrl + 拖拽": "Ctrl + Drag",
+"剪刀：划过的连线全部切断": "Scissors: cut crossed links",
+"原地复制选中的节点": "Duplicate selection in place",
+"全选节点": "Select all nodes",
+"删除选中节点": "Delete selected nodes",
+"复制 / 粘贴节点": "Copy / Paste nodes",
+"左键拖空白处": "Left-drag empty space",
+"框选节点（Shift 为追加；空白处点一下取消全选）": "Box-select (Shift to add; click empty to clear)",
+"拖动选中节点": "Drag selected nodes",
+"同一选择集里的所有节点一起移动": "All selected nodes move together",
+"中键拖 / 空格 + 拖": "Middle-drag / Space+drag",
+"平移画布": "Pan canvas",
+"右键菜单": "Context menu",
+"添加节点、连线、属性操作": "Add nodes, links, properties",
+"滚轮": "Wheel",
+"缩放画布": "Zoom canvas",
+"知道了": "Got it",
+"当前工程尚未保存": "Unsaved changes",
+"继续操作会丢失未保存的修改": "Continuing will discard unsaved changes",
+"是否先保存当前工程？": "Save current project first?",
+"保存": "Save",
+"不保存": "Don't Save",
+"取消": "Cancel",
+"新建工程前保存": "Save before new project",
+"新建工程会清空当前画布，是否先保存修改？": "New project clears the canvas. Save changes first?",
+"打开工程前保存": "Save before opening",
+"打开其他工程会替换当前画布，是否先保存修改？": "Opening replaces the canvas. Save changes first?",
+"打开最近工程前保存": "Save before opening recent",
+"打开最近工程会替换当前画布，是否先保存修改？": "Opening replaces the canvas. Save changes first?",
+"关闭窗口前保存": "Save before closing",
+"关闭窗口后软件会收起到系统托盘，是否先保存修改？": "Closing minimizes to tray. Save changes first?",
+"退出软件前保存": "Save before exit",
+"退出软件会结束当前任务并关闭程序，是否先保存修改？": "Exit stops the task and quits. Save changes first?",
+"已打开：": "Opened: ",
+"暂无最近项目": "No recent projects",
+"加载失败：文件格式不正确或已损坏！": "Load failed: invalid or corrupted file!",
+"无法保存：本地引擎未连接": "Can't save: local engine offline",
+"保存超时，操作已中止": "Save timed out, operation cancelled",
+"确认结果发送失败，操作已中止": "Failed to send confirmation, cancelled",
+"已取消保存，操作已中止": "Save cancelled, operation aborted",
+"保存失败：": "Save failed: ",
+"后端未连接，无法框选识别范围！": "Backend offline, cannot pick region!",
+"后端未连接，无法拾取颜色！": "Backend offline, cannot pick colors!",
+"后端未连接，无法录制宏动作！": "Backend offline, cannot record macro!",
+"该节点没有执行流接口，无法自动接入连线": "Node has no flow port, cannot auto-connect",
+"自动接入失败，请手动连接": "Auto-connect failed, connect manually",
+"已插入连线中间，上下游自动接好": "Inserted into link, connected",
+"没有剪到任何连线": "No links cut",
+"已剪断": "Cut",
+"已删除该连线": "Link deleted",
+"请先选中要复制的节点": "Select nodes to copy first",
+"已复制": "Copied",
+"已追加选中": "Added to selection",
+"已选中": "Selected",
+"个节点，拖动可整体移动": " nodes, drag to move together",
+"个节点": " nodes",
+"条连线": " links",
+"已录制:": "Recorded: ",
+"已计数 ": "Count ",
+"未知错误": "Unknown error",
+"警告": "Warning",
+"【后端】": "[Backend] ",
+"请按下快捷键组合，松开按键结束录制\n（按 ESC 键取消退出）": "Press a hotkey combo, release to finish\n(ESC to cancel)",
+"\n(松开所有按键以确认，按 ESC 取消)": "\n(Release all keys to confirm, ESC to cancel)",
+"剪刀模式：拖出一条线，穿过的连线会被切断": "Scissors: drag a line to cut crossed links",
+"松开鼠标 → 自动插入这两个节点之间": "Release → insert between nodes"
+};
+        var _I18N_KEYS = Object.keys(I18N_DICT).sort(function (a, b) { return b.length - a.length; });
+        var UI_LANG = 'zh';
+        try { UI_LANG = localStorage.getItem('opentask_lang') || 'zh'; } catch (e) {}
+        if (UI_LANG !== 'en') UI_LANG = 'zh';
+
+        // 把中文文本翻译成当前语言（英文模式下按长度降序做子串替换）
+        function tr(s) {
+            if (UI_LANG !== 'en' || typeof s !== 'string' || !s) return s;
+            var out = s;
+            for (var i = 0; i < _I18N_KEYS.length; i++) {
+                var k = _I18N_KEYS[i];
+                if (out.indexOf(k) !== -1) out = out.split(k).join(I18N_DICT[k]);
+            }
+            return out;
+        }
+
+        // 原生 alert 也跟随语言
+        (function () {
+            var _origAlert = window.alert;
+            window.alert = function (m) { return _origAlert.call(window, tr(m)); };
+        })();
+
+        // 收集静态 DOM 中的中文（记录原文，切换时从原文翻译，避免二次翻译）
+        var _i18nDOM = [];
+        function _collectI18nDOM() {
+            var skip = { 'log-console': 1, 'toast': 1, 'hint-bar': 1, 'status': 1, 'recentMenu': 1, 'unsaved-modal': 1 };
+            function walk(node) {
+                if (node.nodeType === 3) {
+                    var t = node.nodeValue;
+                    if (t && /[\u4e00-\u9fff]/.test(t)) _i18nDOM.push({ n: node, a: null, o: t });
+                    return;
+                }
+                if (node.nodeType !== 1) return;
+                if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return;
+                if (node.hasAttribute && node.hasAttribute('data-i18n-skip')) return;
+                if (node.id && skip[node.id]) return;
+                ['title', 'placeholder'].forEach(function (a) {
+                    var v = node.getAttribute(a);
+                    if (v && /[\u4e00-\u9fff]/.test(v)) _i18nDOM.push({ n: node, a: a, o: v });
+                });
+                for (var c = node.firstChild; c; c = c.nextSibling) walk(c);
+            }
+            walk(document.body);
+        }
+        function _applyDOMI18n() {
+            for (var i = 0; i < _i18nDOM.length; i++) {
+                var e = _i18nDOM[i];
+                var v = UI_LANG === 'en' ? tr(e.o) : e.o;
+                if (e.a) e.n.setAttribute(e.a, v); else e.n.nodeValue = v;
+            }
+        }
+
+        // 拦截 canvas 文字绘制：节点标题、端口名、控件名、自绘文字全部跟随语言
+        (function () {
+            var P = CanvasRenderingContext2D.prototype;
+            var _ft = P.fillText;
+            P.fillText = function () {
+                if (typeof arguments[0] === 'string') arguments[0] = tr(arguments[0]);
+                return _ft.apply(this, arguments);
+            };
+            var _mt = P.measureText;
+            P.measureText = function (t) {
+                return _mt.call(this, typeof t === 'string' ? tr(t) : t);
+            };
+        })();
+
+        function _updateLangBtn() {
+            var label = UI_LANG === 'zh' ? 'Switch to English' : '\u5207\u6362\u81f3\u4e2d\u6587';
+            var b = document.getElementById('langBtn');
+            var t = document.getElementById('langBtnText');
+            if (t) t.textContent = label;
+            if (b) b.title = label;
+        }
+        function applyLang(lang) {
+            UI_LANG = (lang === 'en') ? 'en' : 'zh';
+            try { localStorage.setItem('opentask_lang', UI_LANG); } catch (e) {}
+            _applyDOMI18n();
+            _updateLangBtn();
+            var st = document.getElementById('status-text');
+            if (st && window._lastStatusText) st.innerText = tr(window._lastStatusText);
+            if (typeof canvas !== 'undefined' && canvas) canvas.setDirty(true, true);
+        }
+        _collectI18nDOM();
+        _applyDOMI18n();
+        _updateLangBtn();
+        (function () {
+            var b = document.getElementById('langBtn');
+            if (b) b.onclick = function () { applyLang(UI_LANG === 'zh' ? 'en' : 'zh'); };
+        })();
+        // ==== I18N_ENGINE_END ====
+
+
+
 
         // ==================== 画布视觉主题 ====================
         LiteGraph.CANVAS_GRID_SIZE = 20;
@@ -487,12 +811,13 @@
             var txt = document.getElementById("status-text");
             if (!el || !txt) return;
             el.className = "status-pill " + (cls || "ready");
-            txt.innerText = text;
+            window._lastStatusText = text;
+            txt.innerText = tr(text);
         }
         function toast(msg, warn) {
             var t = document.getElementById("toast");
             if (!t) return;
-            t.innerText = msg;
+            t.innerText = tr(msg);
             t.className = "show" + (warn ? " warn" : "");
             clearTimeout(t._timer);
             t._timer = setTimeout(function () { t.className = ""; }, 1800);
@@ -501,7 +826,7 @@
             var h = document.getElementById("hint-bar");
             if (!h) return;
             if (!msg) { h.className = ""; return; }
-            h.innerText = msg;
+            h.innerText = tr(msg);
             h.className = "show";
         }
 
@@ -2391,9 +2716,9 @@
                 // 同一时间只显示一个确认框（例如关闭窗口与托盘退出同时到达）
                 if (unsavedResolve) { resolve("cancel"); return; }
                 var text = unsavedText(reason);
-                document.getElementById("unsaved-title").textContent = text.title;
-                document.getElementById("unsaved-sub").textContent = text.sub;
-                document.getElementById("unsaved-msg").textContent = text.msg;
+                document.getElementById("unsaved-title").textContent = tr(text.title);
+                document.getElementById("unsaved-sub").textContent = tr(text.sub);
+                document.getElementById("unsaved-msg").textContent = tr(text.msg);
                 var buttons = [
                     document.getElementById("unsaved-save-btn"),
                     document.getElementById("unsaved-discard-btn"),
@@ -2582,7 +2907,7 @@
             if (!_recentItems.length) {
                 var empty = document.createElement("div");
                 empty.className = "recent-empty";
-                empty.textContent = "暂无最近项目";
+                empty.textContent = tr("暂无最近项目");
                 menu.appendChild(empty);
                 return;
             }
